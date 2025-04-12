@@ -29,7 +29,7 @@ def get_browser_manager() -> PlaywrightBrowserManager:
     """
     return PlaywrightBrowserManager.get_instance()
 
-async def handle_web_app_ux_evaluation(arguments: Dict[str, Any], ctx: Context, api_key: str) -> list[TextContent]:
+async def handle_web_app_ux_evaluation(arguments: Dict[str, Any], ctx: Context, api_key: str, headless: bool = False) -> list[TextContent]:
     """Handle web_app_ux_evaluator tool calls
     
     This function evaluates the user experience of a web application by using
@@ -39,6 +39,7 @@ async def handle_web_app_ux_evaluation(arguments: Dict[str, Any], ctx: Context, 
         arguments: The tool arguments containing 'url' and 'task'
         ctx: The MCP context for reporting progress
         api_key: The API key for authentication with the LLM service
+        headless: Whether to run the browser in headless mode (default: False)
         
     Returns:
         list[TextContent]: The evaluation results, including console logs and network requests
@@ -82,7 +83,8 @@ async def handle_web_app_ux_evaluation(arguments: Dict[str, Any], ctx: Context, 
             "claude-3-7-sonnet-latest", 
             ctx, 
             tool_call_id=tool_call_id,
-            api_key=api_key
+            api_key=api_key,
+            headless=headless
         )
     
     # Get logs for debugging

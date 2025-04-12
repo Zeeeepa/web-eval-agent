@@ -106,7 +106,7 @@ async def handle_response(response):
         print(f"Error handling response event for {url}: {e}")
 
 
-async def run_browser_task(task: str, model: str = "gemini-2.0-flash-001", ctx: Context = None, tool_call_id: str = None, api_key: str = None) -> Tuple[str, str, str]:
+async def run_browser_task(task: str, model: str = "gemini-2.0-flash-001", ctx: Context = None, tool_call_id: str = None, api_key: str = None, headless: bool = False, step_callback = None) -> Tuple[str, str, str]:
     """
     Run a task using browser-use agent, capturing console and network logs.
 
@@ -116,6 +116,8 @@ async def run_browser_task(task: str, model: str = "gemini-2.0-flash-001", ctx: 
         ctx: The MCP context for progress reporting.
         tool_call_id: The tool call ID for API headers.
         api_key: The API key for authentication.
+        headless: Whether to run the browser in headless mode.
+        step_callback: Optional callback function to be called after each step with (browser_state, agent_output, step_number).
 
     Returns:
         Tuple[str, str, str]: A tuple containing:
@@ -150,11 +152,11 @@ async def run_browser_task(task: str, model: str = "gemini-2.0-flash-001", ctx: 
     try:
         # --- Initialize Playwright Directly ---
         playwright = await async_playwright().start()
-        playwright_browser = await playwright.chromium.launch(headless=False)
+        playwright_browser = await playwright.chromium.launch(headless=headless)
         print("Playwright initialized directly.")
 
         # --- Create browser-use Browser ---
-        browser_config = BrowserConfig(disable_security=True, headless=False)
+        browser_config = BrowserConfig(disable_security=True, headless=headless)
         agent_browser = Browser(config=browser_config)
         agent_browser.playwright = playwright
         agent_browser.playwright_browser = playwright_browser
@@ -193,10 +195,26 @@ async def run_browser_task(task: str, model: str = "gemini-2.0-flash-001", ctx: 
         BrowserContext._create_context = patched_create_context
         # print("Patched BrowserContext._create_context.") # Reduce noise
 
+        # --- Check for browser stream server ---
+        screenshot_client = None
+        try:
+            # Check if browser stream server is running at localhost:8080
+            import httpx
+            async with httpx.AsyncClient() as client:
+                response = await client.get("http://localhost:8080", timeout=1.0)
+                if response.status_code == 200:
+                    screenshot_client = httpx.AsyncClient()
+                    print("Browser stream server detected - will upload screenshots")
+        except Exception:
+            print("No browser stream server detected")
+
         # --- Ensure Tool Call ID ---
         if tool_call_id is None:
             tool_call_id = str(uuid.uuid4())
             print(f"Generated new tool_call_id in run_browser_task: {tool_call_id}")
+            
+        # Create a shorter ID for display
+        agent_id = tool_call_id[:8] if tool_call_id else "unknown"
 
         # --- LLM Setup ---
         llm = ChatAnthropic(model="claude-3-5-sonnet-20240620",
@@ -208,24 +226,49 @@ async def run_browser_task(task: str, model: str = "gemini-2.0-flash-001", ctx: 
 
         # --- Agent Callback ---
         step_history = []
-        async def state_callback(browser_state, agent_output, step_number):
+        
+        # Create a combined callback that handles both step history and screenshots
+        async def combined_callback(browser_state, agent_output, step_number):
+            # Store step history
             step_history.append({
                 "step": step_number,
                 "url": browser_state.url,
                 "output": agent_output
             })
+            
+            # Handle screenshots if server is available
+            if screenshot_client and hasattr(browser_state, 'screenshot') and browser_state.screenshot:
+                try:
+                    # Send screenshot to browser stream server
+                    await screenshot_client.post(
+                        "http://localhost:8080/update_screenshot",
+                        json={"agent_id": f"Agent {agent_id} - Step {step_number}", "screenshot": browser_state.screenshot}
+                    )
+                    print(f"Sent screenshot for step {step_number}")
+                except Exception as e:
+                    print(f"Error sending screenshot: {e}")
+            
+            # Call the original step_callback if provided
+            if step_callback:
+                await step_callback(browser_state, agent_output, step_number)
 
         # --- Initialize and Run Agent ---
         agent = Agent(
             task=task,
             llm=llm,
             browser=agent_browser,
-            register_new_step_callback=state_callback
+            register_new_step_callback=combined_callback
         )
         agent_instance = agent # Store globally if needed elsewhere
 
+        if ctx:
+            ctx.report_progress("Running browser task...")
+            
         print(f"Agent starting task: {task}")
-        agent_result = await agent.run() # Agent returns AgentHistoryList
+        agent_result = await agent.run(max_steps=30) # Agent returns AgentHistoryList
+        
+        if ctx:
+            ctx.report_progress("Browser task completed")
 
         print("\n--- Agent Run Finished ---")
         for r in step_history:
@@ -241,6 +284,25 @@ async def run_browser_task(task: str, model: str = "gemini-2.0-flash-001", ctx: 
         # Print samples from the lists
         if final_console_logs: print("\nSample Console Logs (Last 5):\n" + "\n".join([f"- {l.get('type','?').ljust(8)}: {l.get('text','?')[:150]}" for l in final_console_logs[-5:]]))
         if final_network_requests: print("\nSample Network Requests (Last 5):\n" + "\n".join([f"- {r.get('method','?').ljust(4)} {r.get('response_status','???')} {r.get('url','?')}" for r in final_network_requests[-5:]]))
+
+        # --- Send final screenshot ---
+        if screenshot_client:
+            last_screenshot = None
+            if agent_result and hasattr(agent_result, 'history') and agent_result.history:
+                for item in reversed(agent_result.history.history):
+                    if hasattr(item, 'state') and item.state and hasattr(item.state, 'screenshot'):
+                        last_screenshot = item.state.screenshot
+                        break
+                        
+            if last_screenshot:
+                try:
+                    await screenshot_client.post(
+                        "http://localhost:8080/update_screenshot",
+                        json={"agent_id": f"Agent {agent_id} (completed)", "screenshot": last_screenshot}
+                    )
+                    print("Sent final screenshot")
+                except Exception as e:
+                    print(f"Error sending final screenshot: {e}")
 
         # --- Prepare Combined Results ---
         # Convert AgentHistoryList to a serializable format

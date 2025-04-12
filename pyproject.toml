@@ -14,6 +14,7 @@ dependencies = [
     "mcp>=1.6.0",
     "python-dotenv>=1.1.0",
     "playwright>=1.41.0",
+    "fastapi>=0.115.12",
 ]
 
 [project.scripts]
