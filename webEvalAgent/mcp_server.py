@@ -157,14 +157,15 @@ async def web_ux_run_tests_parallel(ctx: Context) -> list[TextContent]:
         
         # Function to run a single test
         async def run_test(test):
-            test_id = test.get('id', 'unknown')
-            test_desc = test.get('description', 'No description')
-            test_url = test.get('url', 'http://localhost:5173')
+            test_id = test.get('id')
+            test_desc = test.get('description')
+            test_url = test.get('url')
             
             # Create a task description
-            task_description = f"[Test: {test_id}] {test_desc}\n\nSteps:\n" + "\n".join(
+            task_description = f"[Test: {test_id}] url:{test_url} - {test_desc}\n\nSteps:\n" + "\n".join(
                 f"- {step}" for step in test.get('steps', [])
             )
+            task_description = task_description + "\n\n" + "\n\n DO NOT LEAVE THE SPECIFIED DOMAIN"
             
             # Generate unique tool call ID
             tool_call_id = str(uuid.uuid4())

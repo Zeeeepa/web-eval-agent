@@ -242,7 +242,7 @@ async def run_browser_task(task: str, model: str = "gemini-2.0-flash-001", ctx: 
                     # Send screenshot to browser stream server
                     await screenshot_client.post(
                         "http://localhost:8080/update_screenshot",
-                        json={"agent_id": f"Agent {agent_id} - Step {step_number}", "screenshot": browser_state.screenshot}
+                        json={"agent_id": agent_id, "screenshot": browser_state.screenshot}
                     )
                     print(f"Sent screenshot for step {step_number}")
                 except Exception as e:
@@ -298,7 +298,7 @@ async def run_browser_task(task: str, model: str = "gemini-2.0-flash-001", ctx: 
                 try:
                     await screenshot_client.post(
                         "http://localhost:8080/update_screenshot",
-                        json={"agent_id": f"Agent {agent_id} (completed)", "screenshot": last_screenshot}
+                        json={"agent_id": agent_id, "screenshot": last_screenshot}
                     )
                     print("Sent final screenshot")
                 except Exception as e:
