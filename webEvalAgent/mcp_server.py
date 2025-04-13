@@ -26,6 +26,8 @@ from webEvalAgent.src.browser_utils import cleanup_resources
 from webEvalAgent.src.api_utils import validate_api_key
 from webEvalAgent.src.tool_handlers import handle_web_app_ux_evaluation
 from webEvalAgent.src.cursorrules_utils import create_or_update_cursorrules
+from webEvalAgent.src.yaml_utils import load_yaml_or_default, save_yaml
+from webEvalAgent.src.chat_completion import get_chat_completion
 
 # Create the MCP server
 mcp = FastMCP("Operative")
@@ -34,6 +36,7 @@ mcp = FastMCP("Operative")
 class BrowserTools(str, Enum):
     WEB_APP_UX_EVALUATOR = "web_app_ux_evaluator"
     WEB_UX_RUN_TESTS_PARALLEL = "web_ux_run_tests_parallel"
+    GENERATE_UI_TESTS = "generate_ui_tests"
 
 # Parse command line arguments (keeping the parser for potential future arguments)
 parser = argparse.ArgumentParser(description='Run the MCP server with browser debugging capabilities')
@@ -49,6 +52,55 @@ if api_key:
         print("Error: Invalid API key. Please provide a valid OperativeAI API key in the OPERATIVE_API_KEY environment variable.")
 else:
     print("Error: No API key provided. Please set the OPERATIVE_API_KEY environment variable.")
+
+@mcp.tool(name=BrowserTools.GENERATE_UI_TESTS)
+async def generate_ui_tests(mermaid_diagram: str, working_directory: str, ctx: Context) -> list[TextContent]:
+    """Generate UI tests based on a mermaid diagram and reconcile with existing tests.
+
+    Args:
+        mermaid_diagram: The mermaid diagram representing the application structure
+        working_directory: The root directory of the project containing uitests.yaml
+
+    Returns:
+        list[TextContent]: A summary of the generated/updated tests
+    """
+    try:
+        # Load existing tests or get default template
+        tests_file = os.path.join(working_directory, "uitests.yaml")
+        existing_tests = load_yaml_or_default(tests_file)
+
+        # Get new/reconciled tests from LLM
+        new_tests = await get_chat_completion(
+            context={
+                "mermaid_diagram": mermaid_diagram,
+                "existing_tests": existing_tests
+            },
+            api_key=api_key
+        )
+
+        # Save the updated tests
+        save_yaml(tests_file, new_tests)
+
+        # Generate summary of changes
+        added = len(new_tests) - len(existing_tests)
+        summary = f"""UI Test Generation Summary:
+- Previous test count: {len(existing_tests)}
+- New test count: {len(new_tests)}
+- Tests {'added' if added >= 0 else 'removed'}: {abs(added)}
+
+Updated tests have been saved to {tests_file}"""
+
+        return [TextContent(
+            type="text",
+            text=summary
+        )]
+
+    except Exception as e:
+        tb = traceback.format_exc()
+        return [TextContent(
+            type="text",
+            text=f"Error generating UI tests: {str(e)}\n\nTraceback:\n{tb}"
+        )]
 
 @mcp.tool(name=BrowserTools.WEB_APP_UX_EVALUATOR)
 async def web_app_ux_evaluator(url: str, task: str, working_directory: str, ctx: Context) -> list[TextContent]:
@@ -90,10 +142,10 @@ async def web_app_ux_evaluator(url: str, task: str, working_directory: str, ctx:
 
 @mcp.tool(name=BrowserTools.WEB_UX_RUN_TESTS_PARALLEL)
 async def web_ux_run_tests_parallel(ctx: Context) -> list[TextContent]:
-    """Run all UX tests from dummy.json in parallel.
+    """Run all UX tests from uitests.yaml in parallel.
 
     This tool automatically runs multiple UX evaluation tests in parallel, reading test definitions 
-    from webEvalAgent/dummy.json. Each test is executed as a separate browser task, and the results 
+    from uitests.yaml. Each test is executed as a separate browser task, and the results 
     are aggregated into a single report.
 
     Returns:
@@ -133,28 +185,12 @@ async def web_ux_run_tests_parallel(ctx: Context) -> list[TextContent]:
             print("Successfully connected to browser stream")
         except Exception as e:
             print(f"Warning: Could not connect to browser stream: {e}")
-            # Continue with the tests even if we can't connect to the stream
         
-        # Load tests from the JSON file
+        # Load tests from the YAML file
         working_directory = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        tests_file = "webEvalAgent/dummy.json"
-        tests_path = Path(working_directory) / tests_file
-        
-        if not tests_path.exists():
-            return [TextContent(
-                type="text",
-                text=f"Error: Tests file '{tests_file}' not found in {working_directory}"
-            )]
+        tests_file = os.path.join(working_directory, "uitests.yaml")
+        tests = load_yaml_or_default(tests_file)
             
-        with open(tests_path, 'r') as f:
-            tests = json.load(f)
-            
-        if not tests or not isinstance(tests, list):
-            return [TextContent(
-                type="text",
-                text=f"Error: Invalid test format in '{tests_file}'. Expected a list of test objects."
-            )]
-        
         # Function to run a single test
         async def run_test(test):
             test_id = test.get('id')
