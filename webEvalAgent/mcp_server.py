@@ -34,9 +34,9 @@ mcp = FastMCP("Operative")
 
 # Define the browser tools
 class BrowserTools(str, Enum):
-    WEB_APP_UX_EVALUATOR = "web_app_ux_evaluator"
-    WEB_UX_RUN_TESTS_PARALLEL = "web_ux_run_tests_parallel"
-    GENERATE_UI_TESTS = "generate_ui_tests"
+    WEB_APP_UX_EVALUATOR = "web_app_ux_evaluator"  # Evaluate specific UX/UI aspects
+    WEB_UX_RUN_TESTS_PARALLEL = "web_ux_run_tests_parallel"  # Run all tests from uitests.yaml in working directory
+    GENERATE_UI_TESTS = "generate_ui_tests"  # Generate tests from mermaid diagram
 
 # Parse command line arguments (keeping the parser for potential future arguments)
 parser = argparse.ArgumentParser(description='Run the MCP server with browser debugging capabilities')
@@ -70,13 +70,19 @@ async def generate_ui_tests(mermaid_diagram: str, working_directory: str, ctx: C
         existing_tests = load_yaml_or_default(tests_file)
 
         # Get new/reconciled tests from LLM
-        new_tests = await get_chat_completion(
+        new_tests, error_msg = await get_chat_completion(
             context={
                 "mermaid_diagram": mermaid_diagram,
                 "existing_tests": existing_tests
             },
             api_key=api_key
         )
+
+        if error_msg:
+            return [TextContent(
+                type="text",
+                text=f"Error during test generation:\n{error_msg}"
+            )]
 
         # Save the updated tests
         save_yaml(tests_file, new_tests)
@@ -141,36 +147,64 @@ async def web_app_ux_evaluator(url: str, task: str, working_directory: str, ctx:
         )]
 
 @mcp.tool(name=BrowserTools.WEB_UX_RUN_TESTS_PARALLEL)
-async def web_ux_run_tests_parallel(ctx: Context) -> list[TextContent]:
+async def web_ux_run_tests_parallel(working_directory: str, base_url: str, ctx: Context) -> list[TextContent]:
     """Run all UX tests from uitests.yaml in parallel.
 
     This tool automatically runs multiple UX evaluation tests in parallel, reading test definitions 
     from uitests.yaml. Each test is executed as a separate browser task, and the results 
     are aggregated into a single report.
 
+    Args:
+        working_directory: Required. The root directory of the project containing uitests.yaml
+        base_url: Required. The base URL where the application is running (e.g. http://localhost:5173)
+
     Returns:
         list[TextContent]: A detailed evaluation report containing results for all tests.
+        
+    Raises:
+        FileNotFoundError: If uitests.yaml is not found
+        ValueError: If test data is invalid or base_url is invalid
+        Exception: For any other errors during execution
     """
     browser_stream_process = None
     monitor_browser = None
+    playwright = None
+    
+    # Clean up any existing browser sessions first
+    print("Cleaning up existing browser sessions...")
+    await cleanup_resources()
+    
+    # Validate base_url
+    if not base_url:
+        raise ValueError("base_url is required")
+    if not (base_url.startswith('http://') or base_url.startswith('https://')):
+        raise ValueError("base_url must start with http:// or https://")
+    # Remove trailing slash if present
+    base_url = base_url.rstrip('/')
+    
+    # Start the browser stream server
+    print("Starting browser stream server...")
+    browser_stream_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 
+                                      "src", "browser_stream.py")
+    
+    # Kill any existing browser stream processes
+    try:
+        subprocess.run(["pkill", "-f", "browser_stream.py"], capture_output=True)
+    except Exception as e:
+        print(f"Warning: Could not kill existing browser stream processes: {e}")
+    
+    # Start the server as a subprocess using uv
+    browser_stream_process = subprocess.Popen(
+        ["uv", "run", browser_stream_file],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE
+    )
+    
+    # Give the server time to start
+    await asyncio.sleep(2)
+    print("Browser stream server started on http://localhost:8080")
     
     try:
-        # Start the browser stream server
-        print("Starting browser stream server...")
-        browser_stream_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 
-                                          "src", "browser_stream.py")
-        
-        # Start the server as a subprocess using uv
-        browser_stream_process = subprocess.Popen(
-            ["uv", "run", browser_stream_file],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
-        )
-        
-        # Give the server time to start
-        await asyncio.sleep(2)
-        print("Browser stream server started on http://localhost:8080")
-        
         # Start Playwright and open a browser to view the stream
         print("Opening browser to monitor test progress...")
         from playwright.async_api import async_playwright
@@ -180,16 +214,14 @@ async def web_ux_run_tests_parallel(ctx: Context) -> list[TextContent]:
         monitor_page = await monitor_browser.new_page()
         
         # Try to connect to the browser stream server
-        try:
-            await monitor_page.goto("http://localhost:8080", timeout=5000)
-            print("Successfully connected to browser stream")
-        except Exception as e:
-            print(f"Warning: Could not connect to browser stream: {e}")
+        await monitor_page.goto("http://localhost:8080", timeout=5000)
+        print("Successfully connected to browser stream")
         
-        # Load tests from the YAML file
-        working_directory = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        # Load tests from the YAML file in the working directory
         tests_file = os.path.join(working_directory, "uitests.yaml")
+        print(f"Loading tests from: {tests_file}")
         tests = load_yaml_or_default(tests_file)
+        print(f"Loaded {len(tests)} tests from YAML")
             
         # Function to run a single test
         async def run_test(test):
@@ -197,8 +229,18 @@ async def web_ux_run_tests_parallel(ctx: Context) -> list[TextContent]:
             test_desc = test.get('description')
             test_url = test.get('url')
             
+            if not all([test_id, test_desc, test_url]):
+                raise ValueError(f"Test is missing required fields: {test}")
+                
+            if not test_url.startswith('/'):
+                raise ValueError(f"Test {test_id} has invalid URL '{test_url}'. All URLs must be relative paths starting with /")
+            
+            # Combine base_url with relative path
+            full_url = base_url + test_url
+            print(f"Running test {test_id} with URL: {full_url}")
+            
             # Create a task description
-            task_description = f"[Test: {test_id}] url:{test_url} - {test_desc}\n\nSteps:\n" + "\n".join(
+            task_description = f"[Test: {test_id}] url:{full_url} - {test_desc}\n\nSteps:\n" + "\n".join(
                 f"- {step}" for step in test.get('steps', [])
             )
             task_description = task_description + "\n\n" + "\n\n DO NOT LEAVE THE SPECIFIED DOMAIN"
@@ -206,34 +248,21 @@ async def web_ux_run_tests_parallel(ctx: Context) -> list[TextContent]:
             # Generate unique tool call ID
             tool_call_id = str(uuid.uuid4())
             
-            try:
-                # Create a context for this test
-                test_ctx = Context()
-                
-                # Run the test with visible browser
-                result = await handle_web_app_ux_evaluation(
-                    {"url": test_url, "task": task_description, "tool_call_id": tool_call_id},
-                    test_ctx,
-                    api_key,
-                    headless=True  # Run with visible browser
-                )
-                
-                return {
-                    "test_id": test_id,
-                    "description": test_desc,
-                    "url": test_url,
-                    "status": "success",
-                    "result": result
-                }
-            except Exception as e:
-                return {
-                    "test_id": test_id,
-                    "description": test_desc,
-                    "url": test_url,
-                    "status": "error",
-                    "error": str(e),
-                    "traceback": traceback.format_exc()
-                }
+            # Run the test with visible browser
+            result = await handle_web_app_ux_evaluation(
+                {"url": full_url, "task": task_description, "tool_call_id": tool_call_id},
+                ctx,
+                api_key,
+                headless=True  # Run with visible browser
+            )
+            
+            return {
+                "test_id": test_id,
+                "description": test_desc,
+                "url": full_url,
+                "status": "success",
+                "result": result
+            }
         
         # Print progress information
         print(f"Running {len(tests)} UX tests in parallel...")
@@ -241,18 +270,19 @@ async def web_ux_run_tests_parallel(ctx: Context) -> list[TextContent]:
         # Create tasks for all tests
         tasks = [run_test(test) for test in tests]
         
-        # Run the tests concurrently
-        results = await asyncio.gather(*tasks)
+        # Run all tests and let errors propagate
+        results = await asyncio.gather(*tasks, return_exceptions=True)
         
-        # Process results
-        successful = [r for r in results if r["status"] == "success"]
-        failed = [r for r in results if r["status"] == "error"]
-        
+        # Process results and raise first error encountered
+        for result in results:
+            if isinstance(result, Exception):
+                raise result
+            
         # Build summary report
         summary = f"""UX Test Results Summary:
 - Total Tests: {len(tests)}
-- Successful: {len(successful)}
-- Failed: {len(failed)}
+- Successful: {len(results)}
+- Failed: 0
 
 Browser Stream View: http://localhost:8080
 """
@@ -260,16 +290,11 @@ Browser Stream View: http://localhost:8080
         # Add details for each test
         details = "\n\n## Test Details:\n\n"
         for result in results:
-            if result["status"] == "success":
-                # Extract the text content from the result
-                result_text = "\n".join([content.text for content in result["result"] if hasattr(content, 'text')])
-                details += f"### ✅ {result['test_id']}: {result['description']}\n"
-                details += f"URL: {result['url']}\n\n"
-                details += f"{result_text}\n\n"
-            else:
-                details += f"### ❌ {result['test_id']}: {result['description']}\n"
-                details += f"URL: {result['url']}\n"
-                details += f"Error: {result['error']}\n\n"
+            # Extract the text content from the result
+            result_text = "\n".join([content.text for content in result["result"] if hasattr(content, 'text')])
+            details += f"### ✅ {result['test_id']}: {result['description']}\n"
+            details += f"URL: {result['url']}\n\n"
+            details += f"{result_text}\n\n"
         
         # Combine summary and details
         report = summary + details
@@ -279,26 +304,39 @@ Browser Stream View: http://localhost:8080
             text=report
         )]
     
-    except Exception as e:
-        tb = traceback.format_exc()
-        return [TextContent(
-            type="text",
-            text=f"Error executing web_ux_run_tests_parallel: {str(e)}\n\nTraceback:\n{tb}"
-        )]
     finally:
-        # Clean up resources
+        print("Cleaning up resources...")
+        # Clean up resources in reverse order
         if monitor_browser:
             try:
                 await monitor_browser.close()
             except Exception as e:
-                print(f"Error closing Playwright browser: {e}")
+                print(f"Warning: Error closing monitor browser: {e}")
+        
+        if playwright:
+            try:
+                await playwright.stop()
+            except Exception as e:
+                print(f"Warning: Error stopping playwright: {e}")
         
         if browser_stream_process:
             try:
                 browser_stream_process.terminate()
-                print("Browser stream server terminated")
+                stdout, stderr = browser_stream_process.communicate(timeout=5)
+                print("Browser stream server output:")
+                print(stdout.decode())
+                print("Browser stream server errors:")
+                print(stderr.decode())
             except Exception as e:
-                print(f"Error terminating browser stream process: {e}")
+                print(f"Warning: Error terminating browser stream process: {e}")
+                # Force kill if terminate fails
+                try:
+                    browser_stream_process.kill()
+                except:
+                    pass
+        
+        # Final cleanup of any remaining resources
+        await cleanup_resources()
 
 if __name__ == "__main__":
     try:

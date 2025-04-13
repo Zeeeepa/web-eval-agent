@@ -43,29 +43,24 @@ async def handle_web_app_ux_evaluation(arguments: Dict[str, Any], ctx: Context, 
         
     Returns:
         list[TextContent]: The evaluation results, including console logs and network requests
+        
+    Raises:
+        ValueError: If required arguments are missing or invalid
+        Exception: For any other errors during execution
     """
     # Validate required arguments
     if "url" not in arguments or "task" not in arguments:
-        return [TextContent(
-            type="text",
-            text="Error: Both 'url' and 'task' parameters are required. Please provide a URL to evaluate and a specific UX/UI task to test."
-        )]
+        raise ValueError("Both 'url' and 'task' parameters are required")
     
     url = arguments["url"]
     task = arguments["task"]
     tool_call_id = arguments.get("tool_call_id", str(uuid.uuid4()))
     
     if not url or not isinstance(url, str):
-        return [TextContent(
-            type="text",
-            text="Error: 'url' must be a non-empty string containing the web application URL to evaluate."
-        )]
+        raise ValueError("'url' must be a non-empty string")
         
     if not task or not isinstance(task, str):
-        return [TextContent(
-            type="text",
-            text="Error: 'task' must be a non-empty string describing the UX/UI aspect to test."
-        )]
+        raise ValueError("'task' must be a non-empty string")
     
     # Get the singleton browser manager and initialize it
     browser_manager = get_browser_manager()

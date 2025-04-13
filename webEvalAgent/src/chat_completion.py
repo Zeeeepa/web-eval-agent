@@ -2,11 +2,33 @@
 
 import yaml
 import uuid
-from typing import Dict, List, Any
+import traceback
+from typing import Dict, List, Any, Tuple, Union
 from langchain_anthropic import ChatAnthropic
 from langchain_core.messages import HumanMessage, SystemMessage
 
-async def get_chat_completion(context: Dict[str, Any], api_key: str, tool_call_id: str = None) -> List[Dict[str, Any]]:
+def clean_yaml_content(content: str) -> str:
+    """Clean YAML content by removing markdown code block syntax.
+    
+    Args:
+        content: Raw content that may contain markdown code blocks
+        
+    Returns:
+        str: Clean YAML content
+    """
+    # Remove opening code block if present
+    if content.startswith("```"):
+        first_newline = content.find("\n")
+        if first_newline != -1:
+            content = content[first_newline + 1:]
+    
+    # Remove closing code block if present
+    if content.rstrip().endswith("```"):
+        content = content[:content.rstrip().rfind("```")]
+    
+    return content.strip()
+
+async def get_chat_completion(context: Dict[str, Any], api_key: str, tool_call_id: str = None) -> Tuple[Union[List[Dict[str, Any]], None], Union[str, None]]:
     """Get chat completion from the LLM API for test generation.
     
     Args:
@@ -15,7 +37,9 @@ async def get_chat_completion(context: Dict[str, Any], api_key: str, tool_call_i
         tool_call_id: Optional tool call ID for tracking
         
     Returns:
-        List[Dict[str, Any]]: List of generated/reconciled test definitions
+        Tuple containing:
+        - List[Dict[str, Any]]: List of generated/reconciled test definitions or None on error
+        - str: Error message with stack trace if an error occurred, None otherwise
     """
     try:
         # Convert existing tests to YAML for better prompt formatting
@@ -38,9 +62,11 @@ Generate a comprehensive set of UI tests that:
 5. Ensure each test has:
    - A unique ID
    - Clear description
-   - Specific URL
+   - URL (use relative paths starting with /, e.g. "/" for home, "/dashboard" for dashboard)
    - Detailed steps
    - Expected results
+
+IMPORTANT: All URLs in the tests must be relative paths starting with /. Do not use absolute URLs or domain names.
 
 Return ONLY the YAML content for the tests, with no additional explanation or markdown formatting."""
 
@@ -58,35 +84,40 @@ Return ONLY the YAML content for the tests, with no additional explanation or ma
         
         # Create messages in the format expected by ChatAnthropic
         messages = [
-            ("system", "You are a UI test generator that creates comprehensive test cases based on application structure. Output only valid YAML."),
+            ("system", "You are a UI test generator that creates comprehensive test cases based on application structure. Output only valid YAML with relative URLs."),
             ("human", prompt)
         ]
         
         # Use the correct invoke format as per documentation
         response = await llm.ainvoke(messages)
         
-        # Get content from the response
-        yaml_content = response.content
+        # Get content from the response and clean it
+        yaml_content = clean_yaml_content(response.content)
         
         try:
             new_tests = yaml.safe_load(yaml_content)
             if new_tests is None:
-                # Empty YAML or parsing error
-                print("Generated empty YAML, returning existing tests")
-                return context['existing_tests']
+                error_msg = "Generated YAML was empty or invalid"
+                return context['existing_tests'], error_msg
             if not isinstance(new_tests, list):
                 # If not a list, wrap it in a list
                 new_tests = [new_tests]
-            return new_tests
+                
+            # Validate that all URLs are relative paths
+            for test in new_tests:
+                url = test.get('url', '')
+                if not url.startswith('/'):
+                    error_msg = f"Test {test.get('id', 'unknown')} has invalid URL '{url}'. All URLs must be relative paths starting with /"
+                    return context['existing_tests'], error_msg
+                    
+            return new_tests, None
         except yaml.YAMLError as e:
-            print(f"Error parsing generated YAML: {e}")
-            print(f"Raw YAML content: {yaml_content}")
-            return context['existing_tests']
+            error_msg = f"Error parsing generated YAML:\n{str(e)}\n\nRaw YAML content:\n{yaml_content}\n\nStack trace:\n{traceback.format_exc()}"
+            return context['existing_tests'], error_msg
             
     except Exception as e:
-        print(f"Error getting chat completion: {e}")
-        # Return existing tests on error to avoid losing test coverage
-        return context['existing_tests'] 
+        error_msg = f"Error getting chat completion:\n{str(e)}\n\nStack trace:\n{traceback.format_exc()}"
+        return context['existing_tests'], error_msg
 
 def create_default_tests(mermaid_diagram: str) -> List[Dict[str, Any]]:
     """Create default test cases based on the mermaid diagram when API fails.
