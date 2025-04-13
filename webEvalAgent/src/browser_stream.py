@@ -37,7 +37,7 @@ async def read_root():
     <!DOCTYPE html>
     <html>
     <head>
-        <title>Multi-Agent Browser View</title>
+        <title>Operative WebEvalAgent Parallel Testing Mode</title>
         <style>
             body { font-family: sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }
             h1 { text-align: center; color: #333; margin-bottom: 20px; }
@@ -46,8 +46,8 @@ async def read_root():
                 border: 1px solid #ddd;
                 margin: 10px;
                 padding: 15px;
-                width: 45%;
-                min-width: 400px;
+                width: 30%;
+                min-width: 300px;
                 box-shadow: 0 2px 4px rgba(0,0,0,0.1);
                 background-color: white;
                 border-radius: 8px;
@@ -72,7 +72,7 @@ async def read_root():
         </style>
     </head>
     <body>
-        <h1>Browser-Use Agent Views</h1>
+        <h1>Operative WebEvalAgent Parallel Testing Mode</h1>
         <div id="agents-container" class="agents-container">
              <!-- Agent views will be dynamically added here -->
         </div>
