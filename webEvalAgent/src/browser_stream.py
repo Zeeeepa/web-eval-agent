@@ -69,6 +69,8 @@ async def read_root():
             }
             h3 { margin: 0; color: #444; }
             .timestamp { color: #888; font-size: 0.8em; }
+            .metadata { margin-top: 10px; font-size: 0.9em; color: #555; }
+            .status { font-weight: bold; }
         </style>
     </head>
     <body>
@@ -82,7 +84,7 @@ async def read_root():
             const knownAgentIds = new Set(); // Track agents with created divs
             const lastUpdated = {}; // Track when each agent was last updated
 
-            function createOrUpdateAgentElement(agentId, screenshotBase64) {
+            function createOrUpdateAgentElement(agentId, screenshotBase64, metadata) {
                 const now = new Date();
                 lastUpdated[agentId] = now;
                 
@@ -98,7 +100,7 @@ async def read_root():
                     headerDiv.className = 'agent-header';
                     
                     const title = document.createElement('h3');
-                    title.textContent = `Agent: ${agentId}`;
+                    title.textContent = metadata.description || `Agent: ${agentId}`;
                     
                     const timestamp = document.createElement('span');
                     timestamp.className = 'timestamp';
@@ -111,8 +113,17 @@ async def read_root():
                     const img = document.createElement('img');
                     img.alt = `View for ${agentId}`;
                     
+                    const metadataDiv = document.createElement('div');
+                    metadataDiv.className = 'metadata';
+                    metadataDiv.innerHTML = `
+                        <div>Status: <span class="status">${metadata.status || 'Unknown'}</span></div>
+                        <div>ID: ${agentId}</div>
+                        <div>URL: ${metadata.url || 'N/A'}</div>
+                    `;
+                    
                     agentDiv.appendChild(headerDiv);
                     agentDiv.appendChild(img);
+                    agentDiv.appendChild(metadataDiv);
                     
                     agentsContainer.appendChild(agentDiv);
                     console.log(`Created view for ${agentId}`);
@@ -159,7 +170,8 @@ async def read_root():
 
                     // Update existing agent views and create new ones
                     for (const agentId in screenshots) {
-                        createOrUpdateAgentElement(agentId, screenshots[agentId]);
+                        const metadata = { description: 'Test Description', status: 'Running', url: '/test-url' }; // Placeholder metadata
+                        createOrUpdateAgentElement(agentId, screenshots[agentId], metadata);
                     }
                 } catch (error) {
                     console.error("Error fetching screenshots:", error);
