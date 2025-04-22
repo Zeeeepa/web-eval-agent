@@ -6,12 +6,15 @@ import json
 import logging
 import uuid
 import warnings
+import os
 from contextlib import redirect_stdout, redirect_stderr
 from typing import Dict, Any, Tuple, List, Optional
 from collections import deque
 
 # Import log server function
 from .log_server import send_log
+# Import auth utils
+from .auth_utils import get_auth_profile_dir
 
 # Import Playwright types
 from playwright.async_api import async_playwright, Error as PlaywrightError, Browser as PlaywrightBrowser, BrowserContext as PlaywrightBrowserContext, Page as PlaywrightPage
@@ -205,17 +208,49 @@ async def run_browser_task(task: str, model: str = "gemini-2.0-flash-001", ctx: 
     set_verbose(False)
 
     try:
-        # --- Initialize Playwright Directly ---
+        # --- Get auth profile directory ---
+        auth_profile_dir = get_auth_profile_dir()
+        use_auth_profile = os.path.exists(auth_profile_dir)
+        
+        if use_auth_profile:
+            send_log(f"Using auth profile from: {auth_profile_dir}", "🔑", log_type='status')
+        else:
+            send_log("No auth profile found, browser will launch without saved session", "⚠️", log_type='status')
+
+        # --- Initialize Playwright with auth profile if it exists ---
         playwright = await async_playwright().start()
-        playwright_browser = await playwright.chromium.launch(headless=False)
-        send_log("Playwright initialized for task.", "🎭", log_type='status') # Type: status
+        
+        if use_auth_profile:
+            # Launch with persistent context using the auth profile
+            try:
+                playwright_context = await playwright.chromium.launch_persistent_context(
+                    user_data_dir=auth_profile_dir,
+                    headless=False,
+                    args=[
+                        "--disable-blink-features=AutomationControlled",
+                        "--start-maximized",
+                        "--no-first-run",
+                        "--no-default-browser-check",
+                    ]
+                )
+                playwright_browser = playwright_context.browser
+                send_log("Playwright initialized with auth profile", "🎭", log_type='status')
+            except Exception as e:
+                send_log(f"Error launching with auth profile: {e}", "❌", log_type='status')
+                # Fall back to regular browser
+                playwright_browser = await playwright.chromium.launch(headless=False)
+                send_log("Fallback: Playwright initialized without auth profile", "🎭", log_type='status')
+        else:
+            # Regular browser launch
+            playwright_browser = await playwright.chromium.launch(headless=False)
+            send_log("Playwright initialized for task.", "🎭", log_type='status')
 
         # --- Create browser-use Browser ---
         browser_config = BrowserConfig(disable_security=True, headless=False)
         agent_browser = Browser(config=browser_config)
         agent_browser.playwright = playwright
         agent_browser.playwright_browser = playwright_browser
-        send_log("Linked Playwright to agent browser.", "🔗", log_type='status') # Type: status
+        send_log("Linked Playwright to agent browser.", "🔗", log_type='status')
 
         # --- Patch BrowserContext._create_context ---
         # Store original only if not already stored (first run)

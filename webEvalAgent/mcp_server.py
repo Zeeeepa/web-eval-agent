@@ -20,6 +20,7 @@ from webEvalAgent.src.browser_manager import PlaywrightBrowserManager
 # from webEvalAgent.src.browser_utils import cleanup_resources # Removed import
 from webEvalAgent.src.api_utils import validate_api_key
 from webEvalAgent.src.tool_handlers import handle_web_app_ux_evaluation
+from webEvalAgent.src.auth_utils import open_login_browser
 
 # Create the MCP server
 mcp = FastMCP("Operative")
@@ -27,6 +28,7 @@ mcp = FastMCP("Operative")
 # Define the browser tools
 class BrowserTools(str, Enum):
     WEB_APP_UX_EVALUATOR = "web_app_ux_evaluator"
+    OPEN_LOGIN_BROWSER = "open_login_browser"
 
 # Parse command line arguments (keeping the parser for potential future arguments)
 parser = argparse.ArgumentParser(description='Run the MCP server with browser debugging capabilities')
@@ -78,6 +80,41 @@ async def web_app_ux_evaluator(url: str, task: str, working_directory: str, ctx:
         return [TextContent(
             type="text",
             text=f"Error executing web_app_ux_evaluator: {str(e)}\n\nTraceback:\n{tb}"
+        )]
+
+@mcp.tool(name=BrowserTools.OPEN_LOGIN_BROWSER)
+async def open_login_browser_tool(url: str, ctx: Context) -> list[TextContent]:
+    """Open a browser window to allow the user to manually log in to a website.
+    
+    This tool opens a browser window with a persistent profile, allowing users to manually log in
+    to websites like Google. The authentication state will be saved and reused in subsequent
+    web app UX evaluation browser sessions.
+    
+    Args:
+        url: Required. The URL of the login page to open (e.g., 'https://accounts.google.com')
+        
+    Returns:
+        list[TextContent]: A message indicating the outcome of the login browser session
+    """
+    try:
+        ctx.report_progress("Opening login browser...")
+        success = await open_login_browser(url, timeout=60)
+        
+        if success:
+            return [TextContent(
+                type="text",
+                text="Login browser session completed. Authentication state has been saved and will be used in subsequent browser sessions."
+            )]
+        else:
+            return [TextContent(
+                type="text",
+                text="Failed to open login browser. Please check logs for details."
+            )]
+    except Exception as e:
+        tb = traceback.format_exc()
+        return [TextContent(
+            type="text",
+            text=f"Error executing open_login_browser: {str(e)}\n\nTraceback:\n{tb}"
         )]
 
 if __name__ == "__main__":

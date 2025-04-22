@@ -94,57 +94,95 @@ async def handle_web_app_ux_evaluation(arguments: Dict[str, Any], ctx: Context, 
 
     # Get the singleton browser manager and initialize it
     browser_manager = get_browser_manager()
-    if not browser_manager.is_initialized:
-        # Note: browser_manager.initialize will no longer need to start the log server
-        # since we've already done it above
-        await browser_manager.initialize()
-        
-    # Get the evaluation task prompt
-    evaluation_task = get_ux_evaluation_prompt(url, task)
-    send_log(f"📝 Generated evaluation prompt.", "📝")
     
-    # Run the browser task
-    agent_final_result = None
     try:
-        # run_browser_task now only returns the final result string
-        agent_final_result = await run_browser_task(
-            evaluation_task,
-            "claude-3-7-sonnet-latest", # This model name might need update based on browser_utils
-            ctx,
-            tool_call_id=tool_call_id,
-            api_key=api_key
-        )
+        if not browser_manager.is_initialized:
+            # Initialize the browser manager
+            await browser_manager.initialize()
+            
+        # Check if the browser manager initialized successfully
+        if not browser_manager.is_initialized or not browser_manager.browser:
+            error_msg = "Failed to initialize browser. Please try again or check if Playwright is installed correctly."
+            send_log(error_msg, "❌")
+            return [TextContent(
+                type="text",
+                text=f"Error: {error_msg}\n\nTip: If you're trying to access a site that requires authentication, use the open_login_browser tool first."
+            )]
+            
+        # Get the evaluation task prompt
+        evaluation_task = get_ux_evaluation_prompt(url, task)
+        send_log(f"📝 Generated evaluation prompt.", "📝")
+        
+        # Run the browser task
+        agent_final_result = None
+        try:
+            # run_browser_task now only returns the final result string
+            agent_final_result = await run_browser_task(
+                evaluation_task,
+                "claude-3-7-sonnet-latest", # This model name might need update based on browser_utils
+                ctx,
+                tool_call_id=tool_call_id,
+                api_key=api_key
+            )
 
-        # Optional: Send the final result from the agent to the dashboard as well
-        send_log(f"✅ Agent final result: {agent_final_result}", "✅")
+            # Optional: Send the final result from the agent to the dashboard as well
+            send_log(f"✅ Agent final result: {agent_final_result}", "✅")
 
-    except Exception as browser_task_error:
-        error_msg = f"Error during browser task execution: {browser_task_error}\n{traceback.format_exc()}"
+        except Exception as browser_task_error:
+            error_msg = f"Error during browser task execution: {browser_task_error}\n{traceback.format_exc()}"
+            send_log(error_msg, "❌")
+            
+            # Create a more user-friendly error message
+            friendly_error = "An error occurred while running the browser task."
+            
+            # Check for common errors and provide specific guidance
+            error_str = str(browser_task_error).lower()
+            if "no such executable" in error_str or "cannot find browser" in error_str:
+                friendly_error = "Could not find Chrome browser. Please ensure Chrome is installed on your system."
+            elif "timed out" in error_str or "timeout" in error_str:
+                friendly_error = "Browser operation timed out. This could be due to slow network or the site not responding."
+            elif "authentication" in error_str or "login" in error_str or "permission" in error_str:
+                friendly_error = "Authentication error. Try using the open_login_browser tool first to log in manually, then run this evaluation again."
+            
+            agent_final_result = f"Error: {friendly_error}"
+
+        # Format the agent result in a more user-friendly way, including console and network errors
+        formatted_result = format_agent_result(agent_final_result, url, task, console_log_storage, network_request_storage)
+        
+        # Determine if the task was successful
+        task_succeeded = True
+        if agent_final_result.startswith("Error:"):
+            task_succeeded = False
+        elif "success=False" in agent_final_result and "is_done=True" in agent_final_result:
+            task_succeeded = False
+        
+        # Use appropriate status emoji
+        status_emoji = "✅" if task_succeeded else "❌"
+        
+        # Return a better formatted message to the MCP user
+        # Including a reference to the dashboard for detailed logs
+        confirmation_text = f"{formatted_result}\n\n👁️ See the 'Operative Control Center' dashboard for detailed live logs.\nUX Evaluation completed!"
+        send_log(f"UX evaluation task completed for {url}.", status_emoji) # Also send confirmation to dashboard
+
+        return [TextContent(
+            type="text",
+            text=confirmation_text
+        )]
+    except Exception as e:
+        error_msg = f"Unexpected error in UX evaluation: {str(e)}\n{traceback.format_exc()}"
         send_log(error_msg, "❌")
-        agent_final_result = f"Error: {browser_task_error}" # Provide error as result
-
-    # Format the agent result in a more user-friendly way, including console and network errors
-    formatted_result = format_agent_result(agent_final_result, url, task, console_log_storage, network_request_storage)
-    
-    # Determine if the task was successful
-    task_succeeded = True
-    if agent_final_result.startswith("Error:"):
-        task_succeeded = False
-    elif "success=False" in agent_final_result and "is_done=True" in agent_final_result:
-        task_succeeded = False
-    
-    # Use appropriate status emoji
-    status_emoji = "✅" if task_succeeded else "❌"
-    
-    # Return a better formatted message to the MCP user
-    # Including a reference to the dashboard for detailed logs
-    confirmation_text = f"{formatted_result}\n\n👁️ See the 'Operative Control Center' dashboard for detailed live logs.\nUX Evaluation completed!"
-    send_log(f"UX evaluation task completed for {url}.", status_emoji) # Also send confirmation to dashboard
-
-    return [TextContent(
-        type="text",
-        text=confirmation_text
-    )]
+        
+        # Provide a more helpful error message based on the exception
+        if "playwright" in str(e).lower():
+            return [TextContent(
+                type="text",
+                text=f"Error: Browser automation failed. Please ensure Playwright is installed correctly.\n\nDetails: {str(e)}\n\nTip: If you're trying to access a site that requires authentication, use the open_login_browser tool first."
+            )]
+        else:
+            return [TextContent(
+                type="text",
+                text=f"Error: An unexpected error occurred during UX evaluation.\n\nDetails: {str(e)}"
+            )]
 
 def format_agent_result(result_str: str, url: str, task: str, console_logs=None, network_requests=None) -> str:
     """Format the agent result in a readable way with emojis.
