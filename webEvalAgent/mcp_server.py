@@ -7,6 +7,9 @@ import traceback
 import uuid
 from enum import Enum
 from webEvalAgent.src.utils import stop_log_server
+import json
+import sys
+from typing import Any, Dict, List, Union
 
 # Set the API key to a fake key to avoid error in backend
 os.environ["ANTHROPIC_API_KEY"] = 'not_a_real_key'
@@ -15,14 +18,22 @@ os.environ["ANONYMIZED_TELEMETRY"] = 'false'
 # MCP imports
 from mcp.server.fastmcp import FastMCP, Context
 from mcp.types import TextContent
+# Removing the problematic import
+# from mcp.server.tool import Tool, register_tool
 
 # Import our modules
 from webEvalAgent.src.browser_manager import PlaywrightBrowserManager
 # from webEvalAgent.src.browser_utils import cleanup_resources # Removed import
 from webEvalAgent.src.api_utils import validate_api_key
-from webEvalAgent.src.tool_handlers import handle_web_evaluation
+from webEvalAgent.src.tool_handlers import handle_web_evaluation, handle_setup_browser_state
 
-stop_log_server() # Stop the log server before starting the MCP server
+# MCP server modules
+from webEvalAgent.src.browser_utils import handle_browser_input
+from webEvalAgent.src.log_server import start_log_server, open_log_dashboard
+
+# Stop any existing log server to avoid conflicts
+# This doesn't start a new server, just ensures none is running
+stop_log_server()
 
 # Create the MCP server
 mcp = FastMCP("Operative")
@@ -30,6 +41,7 @@ mcp = FastMCP("Operative")
 # Define the browser tools
 class BrowserTools(str, Enum):
     WEB_EVAL_AGENT = "web_eval_agent"
+    SETUP_BROWSER_STATE = "setup_browser_state"  # Add new tool enum
 
 # Parse command line arguments (keeping the parser for potential future arguments)
 parser = argparse.ArgumentParser(description='Run the MCP server with browser debugging capabilities')
@@ -94,31 +106,54 @@ async def web_eval_agent(url: str, task: str, working_directory: str, ctx: Conte
             text=f"Error executing web_eval_agent: {str(e)}\n\nTraceback:\n{tb}"
         )]
 
-if __name__ == "__main__":
+@mcp.tool(name=BrowserTools.SETUP_BROWSER_STATE)
+async def setup_browser_state(url: str = None, ctx: Context = None) -> list[TextContent]:
+    """Sets up and saves browser state for future use.
+
+    Launches a non-headless browser for user interaction, allows login/authentication,
+    and saves the browser state (cookies, local storage, etc.) to a local file.
+
+    Args:
+        url: Optional URL to navigate to upon opening the browser.
+        ctx: The MCP context (used for progress reporting, not directly here).
+
+    Returns:
+        list[TextContent]: Confirmation of state saving or error messages.
+    """
+    is_valid = await validate_api_key(api_key)
+
+    if not is_valid:
+        error_message_str = "❌ Error: API Key validation failed when running the tool.\n"
+        error_message_str += "   Reason: Free tier limit reached.\n"
+        error_message_str += "   👉 Please subscribe at https://operative.sh to continue."
+        return [TextContent(type="text", text=error_message_str)]
     try:
-        # Run a test evaluation on localhost:5173
-        import asyncio
-        
-        async def run_test_eval():
-            await web_eval_agent(
-                url="http://localhost:5173", 
-                task="general eval", 
-                working_directory=".", 
-                ctx="fdafdaf"
-            )
-        
-        # Run the evaluation
-        asyncio.run(run_test_eval())
-    finally:
-        # Ensure resources are cleaned up
-        # asyncio.run(cleanup_resources()) # Cleanup now handled in browser_utils
-        pass # Keep finally block structure if needed later
+        # Generate a new tool_call_id for this specific tool call
+        tool_call_id = str(uuid.uuid4())
+        print(f"Generated new tool_call_id for setup_browser_state: {tool_call_id}")
+        return await handle_setup_browser_state(
+            {"url": url, "tool_call_id": tool_call_id},
+            ctx,
+            api_key
+        )
+    except Exception as e:
+        tb = traceback.format_exc()
+        return [TextContent(
+            type="text",
+            text=f"Error executing setup_browser_state: {str(e)}\n\nTraceback:\n{tb}"
+        )]
 
 def main():
      try:
+         # No longer initialize the log server here
+         # The tools will initialize it when they are called
+         
          # Run the FastMCP server
          mcp.run(transport='stdio')
      finally:
-         # Ensure resources are cleaned up
-         # asyncio.run(cleanup_resources()) # Cleanup now handled in browser_utils
-         pass # Keep finally block structure if needed later
+         # Ensure resources are cleaned up when server terminates
+         pass
+
+# This entry point is used when running directly
+if __name__ == "__main__":
+    main()

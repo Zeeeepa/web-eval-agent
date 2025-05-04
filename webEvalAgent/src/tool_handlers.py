@@ -5,6 +5,7 @@ import json
 import traceback
 import uuid
 import re
+import os
 from contextlib import redirect_stdout, redirect_stderr
 from typing import Dict, List, Any
 
@@ -14,7 +15,7 @@ from mcp.types import TextContent, ImageContent # Added ImageContent import
 # Import the manager directly
 from webEvalAgent.src.browser_manager import PlaywrightBrowserManager
 # Only import run_browser_task from browser_utils
-from webEvalAgent.src.browser_utils import run_browser_task, console_log_storage, network_request_storage
+from webEvalAgent.src.browser_utils import run_browser_task, console_log_storage, network_request_storage, screenshot_storage
 # Import your prompt function
 from webEvalAgent.src.prompts import get_web_evaluation_prompt
 # Import log server functions directly
@@ -22,6 +23,9 @@ from .log_server import send_log, start_log_server, open_log_dashboard
 # For sleep
 import asyncio
 import time  # Ensure time is imported at the top level
+
+# Import playwright directly for browser state setup
+from playwright.async_api import async_playwright
 
 # Constants for limiting output
 MAX_ERROR_OUTPUT_CHARS = 10000  # Maximum characters to include in error output
@@ -77,6 +81,11 @@ async def handle_web_evaluation(arguments: Dict[str, Any], ctx: Context, api_key
     tool_call_id = arguments.get("tool_call_id", str(uuid.uuid4()))
     headless = arguments.get("headless", True)
     
+    # Ensure URL has a protocol (add https:// if missing)
+    if not url.startswith(("http://", "https://", "file://", "data:", "chrome:", "javascript:")):
+        url = "https://" + url
+        send_log(f"Added https:// protocol to URL: {url}", "🔗")
+    
     if not url or not isinstance(url, str):
         return [TextContent(
             type="text",
@@ -121,6 +130,15 @@ async def handle_web_evaluation(arguments: Dict[str, Any], ctx: Context, api_key
         agent_final_result = agent_result_data.get("result", "No result provided")
         screenshots = agent_result_data.get("screenshots", []) # Added this line
 
+        # Log detailed screenshot information
+        send_log(f"Received {len(screenshots)} screenshots from run_browser_task", "📸")
+        for i, screenshot in enumerate(screenshots):
+            if 'screenshot' in screenshot and screenshot['screenshot']:
+                b64_length = len(screenshot['screenshot'])
+                send_log(f"Processing screenshot {i+1}: Step {screenshot.get('step', 'unknown')}, {b64_length} base64 chars", "🔢")
+            else:
+                send_log(f"Screenshot {i+1} missing 'screenshot' data! Keys: {list(screenshot.keys())}", "⚠️")
+
         # Log the number of screenshots captured
         send_log(f"📸 Captured {len(screenshots)} screenshots during evaluation", "📸")
 
@@ -150,17 +168,36 @@ async def handle_web_evaluation(arguments: Dict[str, Any], ctx: Context, api_key
     # Including a reference to the dashboard for detailed logs
     confirmation_text = f"{formatted_result}\n\n👁️ See the 'Operative Control Center' dashboard for detailed live logs.\nWeb Evaluation completed!"
     send_log(f"Web evaluation task completed for {url}.", status_emoji) # Also send confirmation to dashboard
-    # stop_log_server() # Commented out stop_log_server
     
-    return [[TextContent(
-        type="text",
-        text=confirmation_text
-    )] + [ImageContent(
-        type="image",
-        data=screenshot_data["screenshot"],
-        mimeType="image/jpeg"
-    ) for screenshot_data in screenshots]
-    ]
+    # Log final screenshot count before constructing response
+    send_log(f"Constructing final response with {len(screenshots)} screenshots", "🧩")
+    
+    # Create the final response structure
+    response = [TextContent(type="text", text=confirmation_text)]
+    
+    # Debug the screenshot data structure one last time before adding to response
+    for i, screenshot_data in enumerate(screenshots):
+        if 'screenshot' in screenshot_data and screenshot_data['screenshot']:
+            b64_length = len(screenshot_data['screenshot'])
+            send_log(f"Adding screenshot {i+1} to response ({b64_length} chars)", "➕")
+            response.append(ImageContent(
+                type="image",
+                data=screenshot_data["screenshot"],
+                mimeType="image/jpeg"
+            ))
+        else:
+            send_log(f"Screenshot {i+1} can't be added to response - missing data!", "❌")
+    
+    send_log(f"Final response contains {len(response)} items ({len(response)-1} images)", "📦")
+    
+    # MCP tool function expects list[list[TextContent, ImageContent]] - see docstring in mcp_server.py
+    send_log(f"Returning wrapped response: list[ [{len(response)} items] ]", "🎁")
+    
+    # return [response]  # This structure may be incorrect
+    
+    # The correct structure based on docstring is list[list[TextContent, ImageContent]]
+    # i.e., a list containing a single list of mixed content items
+    return [response]
 
 def format_agent_result(result_str: str, url: str, task: str, console_logs=None, network_requests=None) -> str:
     """Format the agent result in a readable way with emojis.
@@ -573,3 +610,178 @@ def format_agent_result(result_str: str, url: str, task: str, console_logs=None,
         return f"{formatted}⚠️ Result parsing failed: {e}\nRaw result: {result_str[:200]}...\n"
     
     return formatted
+
+async def handle_setup_browser_state(arguments: Dict[str, Any], ctx: Context, api_key: str) -> list[TextContent]:
+    """Handle setup_browser_state tool calls
+    
+    This function launches a non-headless browser for user interaction, allows login/authentication,
+    and saves the browser state (cookies, local storage, etc.) to a local file.
+    
+    Args:
+        arguments: The tool arguments, may contain 'url' to navigate to
+        ctx: The MCP context for reporting progress
+        api_key: The API key for authentication (not used directly here)
+        
+    Returns:
+        list[TextContent]: Confirmation of state saving or error messages
+    """
+    # Initialize log server
+    try:
+        start_log_server()
+        await asyncio.sleep(1)
+        open_log_dashboard()
+        send_log("Log dashboard initialized for browser state setup", "🚀")
+    except Exception as log_server_error:
+        print(f"Warning: Could not start log dashboard: {log_server_error}")
+    
+    # Get the URL if provided
+    url = arguments.get("url", "about:blank")
+    
+    # Ensure URL has a protocol (add https:// if missing)
+    if url != "about:blank" and not url.startswith(("http://", "https://", "file://", "data:", "chrome:", "javascript:")):
+        url = "https://" + url
+        send_log(f"Added https:// protocol to URL: {url}", "🔗")
+    
+    # Ensure the state directory exists
+    state_dir = os.path.expanduser("~/.operative/browser_state")
+    os.makedirs(state_dir, exist_ok=True)
+    state_file = os.path.join(state_dir, "state.json")
+    
+    send_log(f"🚀 Starting interactive login session", "🚀")
+    send_log(f"Browser state will be saved to {state_file}", "💾")
+    
+    # Create a user data directory if it doesn't exist
+    user_data_dir = os.path.expanduser("~/.operative/browser_user_data")
+    os.makedirs(user_data_dir, exist_ok=True)
+    send_log(f"Using browser user data directory: {user_data_dir}", "📁")
+    
+    playwright = None
+    context = None
+    page = None
+    
+    try:
+        # Initialize Playwright
+        playwright = await async_playwright().start()
+        send_log("Playwright initialized", "🎭")
+        
+        # Launch browser with a persistent context using the user_data_dir parameter
+        # This replaces the previous browser.launch() + context.new_context() approach
+        context = await playwright.chromium.launch_persistent_context(
+            user_data_dir=user_data_dir,  # Use as a direct parameter instead of an arg
+            headless=False,  # Non-headless for user interaction
+            args=[
+                "--disable-web-security",
+                "--disable-site-isolation-trials",
+                "--no-sandbox",
+                "--disable-blink-features=AutomationControlled",
+                "--disable-features=IsolateOrigins,site-per-process",
+                "--disable-extensions",
+                "--disable-component-extensions-with-background-pages",
+                "--disable-default-apps",
+                "--disable-breakpad",
+                "--disable-dev-shm-usage",
+                "--disable-hang-monitor",
+                "--disable-ipc-flooding-protection",
+                "--disable-popup-blocking",
+                "--disable-prompt-on-repost",
+                "--disable-renderer-backgrounding",
+                "--disable-sync",
+                "--force-color-profile=srgb",
+                "--metrics-recording-only",
+                "--no-first-run",
+                "--enable-automation",
+                "--password-store=basic",
+                "--use-mock-keychain",
+                # No longer need --user-data-dir here as we pass it directly as user_data_dir
+            ],
+            ignore_default_args=["--enable-automation"],
+            # Include the context options directly
+            user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
+            viewport={"width": 1280, "height": 800},
+            device_scale_factor=2,
+            is_mobile=False,
+            has_touch=False,
+            locale="en-US",
+            timezone_id="America/Los_Angeles",
+            permissions=["geolocation", "notifications"]
+        )
+        
+        send_log("Browser launched in interactive mode with persistent context", "🎭")
+        
+        # Modify the navigator.webdriver property to avoid detection
+        await context.add_init_script("""
+            Object.defineProperty(navigator, 'webdriver', {
+                get: () => false,
+            });
+        """)
+        send_log("Browser context created with anti-detection measures", "🛡️")
+        
+        # Create a new page and navigate to the URL
+        page = await context.new_page()
+        await page.goto(url)
+        send_log(f"🔗 Navigated to: {url}", "🔗")
+        
+        send_log("Waiting for user interaction (close browser tab or 180s timeout)...", "🖱️")
+        
+        # Alternative approach to detect page closure:
+        # We'll use a simple flag that gets set when the page is closed
+        page_closed_flag = False
+        
+        # Set up an event listener for page close
+        page_close_event = asyncio.Event()
+        
+        # Define the handler function that will be called when page closes
+        async def on_page_close():
+            send_log("Page close event detected", "👁️")
+            page_close_event.set()
+        
+        # Register the handler to be called when page closes
+        page.once("close", lambda: asyncio.create_task(on_page_close()))
+        
+        # Wait for either the event to be set or timeout
+        try:
+            # Wait for 180 seconds (3 minutes) or until the page is closed
+            await asyncio.wait_for(page_close_event.wait(), timeout=180)
+            # If we get here without a timeout exception, the page was closed
+            send_log("User closed the browser tab, saving state", "🖱️")
+        except asyncio.TimeoutError:
+            # If we get a timeout, the 180 seconds elapsed
+            send_log("Timeout reached (180s), saving current state", "⚠️")
+        
+        # Save the browser state to a file
+        await context.storage_state(path=state_file)
+        
+        # Also save cookies for debugging purposes
+        cookies = await context.cookies()
+        cookies_file = os.path.join(state_dir, "cookies.json")
+        with open(cookies_file, 'w') as f:
+            json.dump(cookies, f, indent=2)
+            
+        send_log(f"Saved browser state to {state_file}", "💾")
+        send_log(f"Saved cookies to {cookies_file} for reference", "🍪")
+        
+        return [TextContent(
+            type="text",
+            text=f"✅ Browser state saved successfully to {state_file}. This state will be used automatically in future web_eval_agent sessions."
+        )]
+        
+    except Exception as e:
+        error_msg = f"Error during browser state setup: {e}\n{traceback.format_exc()}"
+        send_log(error_msg, "❌")
+        return [TextContent(
+            type="text",
+            text=f"❌ Failed to save browser state: {e}"
+        )]
+    finally:
+        # Close resources in reverse order
+        if page:
+            try: await page.close()
+            except: pass
+        if context:
+            try: await context.close()
+            except: pass
+        if playwright:
+            try: await playwright.stop()
+            except: pass
+            
+        send_log("Browser session completed", "🏁")

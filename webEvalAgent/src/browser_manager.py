@@ -137,6 +137,11 @@ class PlaywrightBrowserManager:
         if not self.is_initialized:
             await self.initialize()
 
+        # Ensure URL has a protocol (add https:// if missing)
+        if not url.startswith(("http://", "https://", "file://", "data:", "chrome:", "javascript:")):
+            url = "https://" + url
+            send_log(f"Added https:// protocol to URL: {url}", "🔗", log_type='status')
+            
         # Stop screencast and close previous page/session if they exist
         if self.cdp_session and self.screencast_task_running:
             try:
