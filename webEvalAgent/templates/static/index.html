@@ -8,7 +8,8 @@
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Add Geist Font CSS -->
-    <link rel="stylesheet" href="https://geistfont.vercel.app/geist.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/geist-font/dist/geist/geist.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/geist-font/dist/geist-mono/geist-mono.css">
     <script>
         tailwind.config = {
             darkMode: 'class', // Enable class-based dark mode
@@ -145,6 +146,25 @@
              stroke-width: 1.5;
         }
     </style>
+    <script>
+        // Fallback for Geist font if CDN fails
+        document.addEventListener('DOMContentLoaded', function() {
+            const fontFallbackStyles = document.createElement('style');
+            fontFallbackStyles.textContent = `
+                @font-face {
+                    font-family: 'Geist UltraLight';
+                    src: local('Arial');
+                    font-weight: 200;
+                }
+                @font-face {
+                    font-family: 'Geist Mono';
+                    src: local('Courier New');
+                    font-weight: normal;
+                }
+            `;
+            document.head.appendChild(fontFallbackStyles);
+        });
+    </script>
 </head>
 <body class="font-light bg-light-bg text-light-text dark:bg-dark-bg dark:text-dark-text font-sans flex flex-col h-screen overflow-hidden transition-colors duration-200">
     <!-- Header -->
@@ -209,10 +229,22 @@
         <!-- Browser View Column -->
         <div class="browser-column bg-light-secondary-bg dark:bg-dark-secondary-bg border border-light-border dark:border-dark-border rounded-lg flex flex-col overflow-hidden h-full shadow-sm">
              <div class="log-header bg-light-secondary-bg dark:bg-dark-secondary-bg border-b border-light-border dark:border-dark-border p-2 flex justify-between items-center text-sm font-medium flex-shrink-0 rounded-t-lg">
-                <h2 class="text-light-secondary-text dark:text-dark-secondary-text font-semibold">🌐 Browser View</h2> <!-- Slightly darker text for header -->
+                <h2 class="text-light-secondary-text dark:text-dark-secondary-text font-semibold">🌐 Browser Agent View</h2> <!-- Slightly darker text for header -->
             </div>
-            <div id="browser-view-container" class="flex-grow overflow-auto p-1 bg-light-secondary-bg dark:bg-dark-secondary-bg flex items-center justify-center rounded-b-lg">
-                 <img id="browser-view-img" src="" alt="Browser View" class="max-w-full max-h-full object-contain border border-light-border dark:border-dark-border cursor-crosshair shadow-inner rounded-md" tabindex="0"/>
+            <div id="browser-view-container" class="flex-grow overflow-auto p-1 bg-light-secondary-bg dark:bg-dark-secondary-bg flex flex-col items-center justify-center rounded-b-lg">
+                <img id="browser-view-img" src="" alt="Browser Agent View" class="w-full max-h-full object-contain border border-light-border dark:border-dark-border cursor-crosshair shadow-inner rounded-md flex-grow" tabindex="0"/>
+                <div class="evaluation-params bg-light-secondary-bg dark:bg-dark-secondary-bg border border-light-border dark:border-dark-border rounded-md p-2 text-xs w-full mt-2">
+                    <div class="flex flex-col">
+                        <div class="flex items-center">
+                            <span class="font-semibold mr-2">Current URL:</span>
+                            <span id="current-url" class="font-mono overflow-hidden text-ellipsis">Not set</span>
+                        </div>
+                        <div class="flex items-center mt-1">
+                            <span class="font-semibold mr-2">Current Task:</span>
+                            <span id="current-task" class="overflow-hidden text-ellipsis">Not set</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -290,6 +322,9 @@
 
         socket.on('connect', () => {
             console.log('SocketIO connected! Socket ID:', socket.id);
+            
+            // Request current evaluation parameters
+            socket.emit('request_evaluation_params');
         });
 
         socket.on('connect_error', (error) => {
@@ -299,6 +334,20 @@
         socket.on('disconnect', (reason) => {
             console.warn('SocketIO disconnected! Reason:', reason);
         });
+
+        // Add a function to check if parameters are empty and request them if needed
+        function checkAndRequestParams() {
+            const currentUrlEl = document.getElementById('current-url');
+            const currentTaskEl = document.getElementById('current-task');
+            
+            if (currentUrlEl && currentTaskEl && 
+                (currentUrlEl.textContent === 'Not set' || currentTaskEl.textContent === 'Not set')) {
+                socket.emit('request_evaluation_params');
+            }
+        }
+
+        // Call this function after a short delay to ensure the UI is ready
+        setTimeout(checkAndRequestParams, 2000);
 
         // DOM Elements
         const agentLogEl = document.getElementById('agent-log-container');
@@ -534,7 +583,47 @@
             }
         });
 
+        // Receive evaluation parameters updates
+        socket.on('evaluation_params', (payload) => {
+            if (payload) {
+                const currentUrlEl = document.getElementById('current-url');
+                const currentTaskEl = document.getElementById('current-task');
+                
+                if (currentUrlEl && payload.url !== undefined) {
+                    currentUrlEl.textContent = payload.url;
+                    console.log('Updated current URL display:', payload.url);
+                }
+                
+                if (currentTaskEl && payload.task !== undefined) {
+                    currentTaskEl.textContent = payload.task;
+                    console.log('Updated current task display:', payload.task);
+                }
+            }
+        });
+
         console.log('Dashboard script initialised.');
+
+        // --- Async mode selection ---
+        _async_mode = 'threading';
+
+        // Configure logging for Flask and SocketIO (optional, can be noisy)
+        log = logging.getLogger('werkzeug');
+        log.setLevel(logging.ERROR); // Reduce Flask's default logging
+        logging.getLogger('socketio').setLevel(logging.ERROR);
+        logging.getLogger('engineio').setLevel(logging.ERROR);
+
+        // PostHog fallback for undefined token
+        if (typeof window.posthog !== 'undefined') {
+            if (!window.posthog.config || !window.posthog.config.token) {
+                window.posthog.init = function() {
+                    console.log("PostHog initialization bypassed - no token provided");
+                    return { 
+                        capture: function() {},
+                        identify: function() {}
+                    };
+                };
+            }
+        }
     </script>
 </body>
 </html>

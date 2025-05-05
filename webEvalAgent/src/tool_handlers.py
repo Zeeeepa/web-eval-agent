@@ -92,6 +92,10 @@ async def handle_web_evaluation(arguments: Dict[str, Any], ctx: Context, api_key
     # Send initial status to dashboard
     send_log(f"🚀 Received web evaluation task: {task}", "🚀")
     send_log(f"🔗 Target URL: {url}", "🔗")
+    
+    # Set the evaluation parameters to display in the dashboard
+    from .log_server import set_evaluation_params
+    set_evaluation_params(url, task)
 
     # Get the singleton browser manager and initialize it
     browser_manager = get_browser_manager()

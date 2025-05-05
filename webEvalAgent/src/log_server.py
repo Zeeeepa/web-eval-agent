@@ -48,6 +48,11 @@ def handle_connect():
     # Send status message to dashboard
     send_log(f"Connected to log server at {datetime.now().strftime('%H:%M:%S')}", "✅", log_type='status')
 
+    # Send current evaluation parameters if they exist
+    global current_url, current_task
+    if current_url or current_task:
+        socketio.emit('evaluation_params', {'url': current_url, 'task': current_task}, to=request.sid)
+
 @socketio.on('disconnect')
 def handle_disconnect():
     # Remove client from connected_clients set
@@ -61,6 +66,13 @@ def handle_disconnect():
     except Exception:
         pass
 
+@socketio.on('request_evaluation_params')
+def handle_request_evaluation_params():
+    """Handle requests for current evaluation parameters."""
+    global current_url, current_task
+    if current_url or current_task:
+        socketio.emit('evaluation_params', {'url': current_url, 'task': current_task}, to=request.sid)
+
 def send_log(message: str, emoji: str = "➡️", log_type: str = 'agent'):
     """Sends a log message with an emoji prefix and type to all connected clients."""
     # Ensure socketio context is available. If called from a non-SocketIO thread,
@@ -71,6 +83,18 @@ def send_log(message: str, emoji: str = "➡️", log_type: str = 'agent'):
         socketio.emit('log_message', {'data': log_entry, 'type': log_type})
     except Exception:
         pass
+
+# --- Evaluation Parameters Function ---
+def set_evaluation_params(url: str, task: str):
+    """Sets the current URL and task for the evaluation and notifies connected clients."""
+    global current_url, current_task
+    current_url = url
+    current_task = task
+    # Emit an event to update connected clients
+    socketio.emit('evaluation_params', {'url': url, 'task': task})
+    # Log the parameters
+    send_log(f"Evaluation parameters set - URL: {url}", "🔍", log_type='status')
+    send_log(f"Evaluation parameters set - Task: {task}", "📋", log_type='status')
 
 # --- Browser View Update Function ---
 async def send_browser_view(image_data_url: str):
