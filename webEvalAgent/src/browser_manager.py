@@ -300,7 +300,8 @@ class PlaywrightBrowserManager:
         # Return only the last N entries
         # Sort by timestamp (descending) to get the most recent logs first
         deduplicated_logs.sort(key=lambda x: x.get('timestamp', 0), reverse=True)
-        deduplicated_logs = deduplicated_logs[:last_n]
+        # Take only the last N entries (or all if last_n is large enough)
+        deduplicated_logs = deduplicated_logs[:last_n] if last_n < len(deduplicated_logs) else deduplicated_logs
         # Sort back by timestamp (ascending) for consistent output
         deduplicated_logs.sort(key=lambda x: x.get('timestamp', 0))
         
@@ -313,8 +314,8 @@ class PlaywrightBrowserManager:
             
         # Sort by timestamp (descending) to get the most recent requests first
         sorted_requests = sorted(self.network_requests, key=lambda x: x.get('timestamp', 0), reverse=True)
-        # Take only the last N entries
-        limited_requests = sorted_requests[:last_n]
+        # Take only the last N entries (or all if last_n is large enough)
+        limited_requests = sorted_requests[:last_n] if last_n < len(sorted_requests) else sorted_requests
         # Sort back by timestamp (ascending) for consistent output
         limited_requests.sort(key=lambda x: x.get('timestamp', 0))
         
