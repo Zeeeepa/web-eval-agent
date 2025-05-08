@@ -7,6 +7,7 @@ import logging
 import uuid
 import warnings
 import base64
+import os
 from contextlib import redirect_stdout, redirect_stderr
 from typing import Dict, Any, Tuple, List, Optional
 from collections import deque
@@ -49,7 +50,7 @@ browser_task_loop = None  # Store the asyncio loop used by run_browser_task
 screenshot_task = None  # Store the periodic screenshot task
 
 # Define the maximum number of logs/requests to keep
-MAX_LOG_ENTRIES = 10
+MAX_LOG_ENTRIES = 1000  # Increased from 10 to allow more log entries
 
 # --- URL Filtering for Network Requests ---
 def should_log_network_request(request) -> bool:
@@ -570,7 +571,18 @@ def set_screencast_running(running: bool = True) -> None:
     global active_screencast_running
     active_screencast_running = running
 
-async def run_browser_task(task: str, model: str = "gemini-2.0-flash-001", ctx: Context = None, tool_call_id: str = None, api_key: str = None, headless: bool = True) -> Dict[str, Any]:
+# Helper function to get persisted browser state
+def _get_persisted_state() -> Optional[str]:
+    """
+    Check for and return the path to persisted browser state if it exists.
+    
+    Returns:
+        Optional[str]: Path to the state file if it exists, None otherwise
+    """
+    state_file = os.path.expanduser("~/.operative/browser_state/state.json")
+    return state_file if os.path.exists(state_file) else None
+
+async def run_browser_task(task: str, tool_call_id: str = None, api_key: str = None, headless: bool = True) -> Dict[str, Any]:
     global browser_task_loop, screenshot_task
     # Store the current asyncio loop for input handling
     browser_task_loop = asyncio.get_running_loop()
@@ -579,8 +591,6 @@ async def run_browser_task(task: str, model: str = "gemini-2.0-flash-001", ctx: 
 
     Args:
         task: The task to run.
-        model: The model identifier (not directly used for LLM here, taken from ChatAnthropic).
-        ctx: The MCP context for progress reporting.
         tool_call_id: The tool call ID for API headers.
         api_key: The API key for authentication.
 
@@ -632,6 +642,11 @@ async def run_browser_task(task: str, model: str = "gemini-2.0-flash-001", ctx: 
         # Get the CDP URL from the browser
         send_log(f"Playwright initialized for task with CDP (headless={headless}).", "🎭", log_type='status') # Type: status
 
+        # --- Check for persisted browser state ---
+        persisted_state = _get_persisted_state()
+        if persisted_state:
+            send_log(f"Loading persisted browser state from {persisted_state}", "💾", log_type='status')
+        
         # --- Create browser-use Browser ---
         browser_config = BrowserConfig(disable_security=True, headless=headless, cdp_url="http://127.0.0.1:9222")
         agent_browser = Browser(config=browser_config)
@@ -643,7 +658,9 @@ async def run_browser_task(task: str, model: str = "gemini-2.0-flash-001", ctx: 
         # Detailed logging and error handling for each step
         try:
             # Create a context and page as recommended
-            context = await playwright_browser.new_context()
+            context = await playwright_browser.new_context(
+                storage_state=persisted_state
+            )
             first_page = await context.new_page()
             
             # Create a CDP session for the page
@@ -779,7 +796,28 @@ async def run_browser_task(task: str, model: str = "gemini-2.0-flash-001", ctx: 
             if original_create_context is None:
                  raise RuntimeError("Original _create_context not stored correctly")
 
+            # Check for persisted browser state
+            persisted_state = _get_persisted_state()
+            if persisted_state:
+                send_log(f"Loading persisted browser state in new context", "💾", log_type='status')
+            
+            # Call the original method but with storage_state if available
             raw_playwright_context = await original_create_context(self, browser_pw)
+            
+            # Apply storage state after context creation if available
+            if persisted_state and raw_playwright_context:
+                try:
+                    with open(persisted_state, 'r') as f:
+                        state_data = json.load(f)
+                    
+                    # Load cookies and localStorage from state
+                    if 'cookies' in state_data:
+                        await raw_playwright_context.add_cookies(state_data['cookies'])
+                    
+                    # Origins with storage set is already handled by Playwright internally
+                    send_log(f"Applied persisted browser state to context", "💾", log_type='status')
+                except Exception as e:
+                    send_log(f"Failed to apply persisted state to context: {e}", "⚠️", log_type='status')
 
             if raw_playwright_context:
                 # Use the non-async wrapper functions for event listeners
@@ -844,6 +882,9 @@ async def run_browser_task(task: str, model: str = "gemini-2.0-flash-001", ctx: 
                         screenshot_bytes = await current_page.screenshot(type='jpeg', quality=80)
                         screenshot_base64 = base64.b64encode(screenshot_bytes).decode('utf-8')
                         
+                        # Log screenshot size for debugging
+                        send_log(f"Screenshot captured: {len(screenshot_bytes)} bytes, {len(screenshot_base64)} base64 chars", "📊", log_type='status')
+                        
                         # Store screenshot with metadata
                         screenshot_storage.append({
                             'step': step_number,
@@ -852,7 +893,7 @@ async def run_browser_task(task: str, model: str = "gemini-2.0-flash-001", ctx: 
                             'screenshot': screenshot_base64
                         })
                         
-                        send_log(f"Screenshot captured for step {step_number}", "📸", log_type='status')
+                        send_log(f"Screenshot stored in storage (total: {len(screenshot_storage)})", "📸", log_type='status')
                         
                         # Re-inject the overlay
                         send_log(f"Re-injecting overlay after step {step_number} into page {current_page.url}", "🔄", log_type='status')
@@ -887,6 +928,14 @@ async def run_browser_task(task: str, model: str = "gemini-2.0-flash-001", ctx: 
         # --- Prepare Combined Results ---
         # Convert AgentHistoryList to a serializable format (just stringify)
         serialized_result = str(agent_result)
+
+        # Log information about screenshots before returning
+        send_log(f"Returning {len(screenshot_storage)} screenshots from run_browser_task", "📸", log_type='status')
+        if screenshot_storage:
+            for i, screenshot in enumerate(screenshot_storage):
+                send_log(f"Screenshot {i+1}: Step {screenshot['step']}, {len(screenshot['screenshot'])} base64 chars", "🔢", log_type='status')
+        else:
+            send_log("No screenshots captured during task execution!", "⚠️", log_type='status')
 
         # Return the agent result and screenshots
         return {
