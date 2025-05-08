@@ -59,20 +59,21 @@ else:
     print("Error: No API key provided. Please set the OPERATIVE_API_KEY environment variable.")
 
 @mcp.tool(name=BrowserTools.WEB_EVAL_AGENT)
-async def web_eval_agent(url: str, task: str, working_directory: str, ctx: Context, external_browser: bool = False) -> list[TextContent]:
+async def web_eval_agent(url: str, task: str, ctx: Context, external_browser: bool = False) -> list[TextContent]:
     """Evaluate the user experience / interface of a web application.
 
     This tool allows the AI to assess the quality of user experience and interface design
     of a web application by performing specific tasks and analyzing the interaction flow.
 
-    Before this tool is used, the web application should already be running locally in a separate terminal.
+    Before this tool is used, the web application should already be running locally on a port.
 
     Args:
         url: Required. The localhost URL of the web application to evaluate, including the port number.
+            Example: http://localhost:3000, http://localhost:8080, http://localhost:4200, http://localhost:5173, etc.
+            Try to avoid using the path segments of the URL, and instead use the root URL.
         task: Required. The specific UX/UI aspect to test (e.g., "test the checkout flow",
              "evaluate the navigation menu usability", "check form validation feedback")
              Be as detailed as possible in your task description. It could be anywhere from 2 sentences to 2 paragraphs.
-        working_directory: Required. The root directory of the project
         external_browser: Optional. Whether to show the browser window externally during evaluation. Defaults to False (shown in operative control center). 
 
     Returns:

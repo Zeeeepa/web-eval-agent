@@ -671,29 +671,8 @@ async def handle_setup_browser_state(arguments: Dict[str, Any], ctx: Context, ap
             user_data_dir=user_data_dir,  # Use as a direct parameter instead of an arg
             headless=False,  # Non-headless for user interaction
             args=[
-                "--disable-web-security",
-                "--disable-site-isolation-trials",
                 "--no-sandbox",
-                "--disable-blink-features=AutomationControlled",
-                "--disable-features=IsolateOrigins,site-per-process",
-                "--disable-extensions",
-                "--disable-component-extensions-with-background-pages",
-                "--disable-default-apps",
-                "--disable-breakpad",
-                "--disable-dev-shm-usage",
-                "--disable-hang-monitor",
-                "--disable-ipc-flooding-protection",
-                "--disable-popup-blocking",
-                "--disable-prompt-on-repost",
-                "--disable-renderer-backgrounding",
-                "--disable-sync",
-                "--force-color-profile=srgb",
-                "--metrics-recording-only",
-                "--no-first-run",
-                "--enable-automation",
-                "--password-store=basic",
-                "--use-mock-keychain",
-                # No longer need --user-data-dir here as we pass it directly as user_data_dir
+                "--disable-blink-features=AutomationControlled"
             ],
             ignore_default_args=["--enable-automation"],
             # Include the context options directly
