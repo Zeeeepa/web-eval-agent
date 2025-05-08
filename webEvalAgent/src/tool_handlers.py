@@ -145,9 +145,6 @@ async def handle_web_evaluation(arguments: Dict[str, Any], ctx: Context, api_key
         # Log the number of screenshots captured
         send_log(f"📸 Captured {len(screenshots)} screenshots during evaluation", "📸")
 
-        # Optional: Send the final result from the agent to the dashboard as well
-        send_log(f"✅ Agent final result: {agent_final_result}", "✅")
-
     except Exception as browser_task_error:
         error_msg = f"Error during browser task execution: {browser_task_error}\n{traceback.format_exc()}"
         send_log(error_msg, "❌")
