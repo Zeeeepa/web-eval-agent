@@ -10,6 +10,7 @@ from webEvalAgent.src.utils import stop_log_server
 import json
 import sys
 from typing import Any, Dict, List, Union
+from webEvalAgent.src.log_server import send_log
 
 # Set the API key to a fake key to avoid error in backend
 os.environ["ANTHROPIC_API_KEY"] = 'not_a_real_key'
@@ -129,7 +130,7 @@ async def setup_browser_state(url: str = None, ctx: Context = None) -> list[Text
     try:
         # Generate a new tool_call_id for this specific tool call
         tool_call_id = str(uuid.uuid4())
-        print(f"Generated new tool_call_id for setup_browser_state: {tool_call_id}")
+        send_log(f"Generated new tool_call_id for setup_browser_state: {tool_call_id}")
         return await handle_setup_browser_state(
             {"url": url, "tool_call_id": tool_call_id},
             ctx,
