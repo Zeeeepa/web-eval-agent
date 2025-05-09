@@ -571,6 +571,7 @@ def set_screencast_running(running: bool = True) -> None:
     global active_screencast_running
     active_screencast_running = running
 
+<<<<<<< HEAD
 # Helper function to get persisted browser state
 def _get_persisted_state() -> Optional[str]:
     """
@@ -583,6 +584,9 @@ def _get_persisted_state() -> Optional[str]:
     return state_file if os.path.exists(state_file) else None
 
 async def run_browser_task(task: str, tool_call_id: str = None, api_key: str = None, headless: bool = True) -> Dict[str, Any]:
+=======
+async def run_browser_task(task: str, model: str = "gemini-2.0-flash-001", ctx: Context = None, tool_call_id: str = None, api_key: str = None, headless: bool = True) -> Dict[str, Any]:
+>>>>>>> f002af1 (Revert "Revert "fix blank screens for static apps"")
     global browser_task_loop, screenshot_task
     # Store the current asyncio loop for input handling
     browser_task_loop = asyncio.get_running_loop()
