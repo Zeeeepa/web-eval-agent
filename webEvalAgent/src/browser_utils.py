@@ -776,7 +776,8 @@ async def run_browser_task(task: str, tool_call_id: str = None, api_key: str = N
             
             # Start the screenshot capture task
             active_screencast_running = True
-            screenshot_task = asyncio.create_task(capture_screenshots(first_page))
+            if headless:
+                screenshot_task = asyncio.create_task(capture_screenshots(first_page))
             
         except Exception as e:
             send_log(f"Failed to start CDP screencast: {e}", "❌", log_type='status')
