@@ -107,21 +107,30 @@ async def _handle_request(request):
         if not should_log_network_request(request):
             return
             
-        try: headers = await request.all_headers()
-        except PlaywrightError as e: headers = {"error": f"Req Header Error: {e}"}
-        except Exception as e: headers = {"error": f"Unexpected Req Header Error: {e}"}
+        try:
+            headers = await request.all_headers()
+        except PlaywrightError as e:
+            headers = {"error": f"Req Header Error: {e}"}
+        except Exception as e:
+            headers = {"error": f"Unexpected Req Header Error: {e}"}
 
         post_data = None
         try:
             if request.post_data:
                  post_data_buffer = await request.post_data_buffer()
                  if post_data_buffer:
-                     try: post_data = post_data_buffer.decode('utf-8', errors='replace')
-                     except Exception: post_data = repr(post_data_buffer)
-                 else: post_data = ""
-            else: post_data = None
-        except PlaywrightError as e: post_data = f"Post Data Error: {e}"
-        except Exception as e: post_data = f"Unexpected Post Data Error: {e}"
+                     try:
+                         post_data = post_data_buffer.decode('utf-8', errors='replace')
+                     except Exception:
+                         post_data = repr(post_data_buffer)
+                 else:
+                     post_data = ""
+            else:
+                post_data = None
+        except PlaywrightError as e:
+            post_data = f"Post Data Error: {e}"
+        except Exception as e:
+            post_data = f"Unexpected Post Data Error: {e}"
 
         request_entry = { "url": request.url, "method": request.method, "headers": headers, "postData": post_data, "timestamp": asyncio.get_event_loop().time(), "resourceType": request.resource_type, "is_navigation": request.is_navigation_request(), "id": id(request) }
         network_request_storage.append(request_entry)
@@ -155,7 +164,8 @@ async def _handle_response(response):
         try:
             body_buffer = await response.body()
             body_size = len(body_buffer) if body_buffer else 0
-        except Exception: pass
+        except Exception:
+            pass
 
         for req in network_request_storage:
             if req.get("id") == req_id and "response_status" not in req:
@@ -263,7 +273,13 @@ async def inject_agent_control_overlay(page: PlaywrightPage):
             return
         except Exception as e3:
             send_log(f"Failed to inject with page.evaluate_handle(): {e3}", "⚠️", log_type='status')
-            raise Exception(f"All injection methods failed: {e1}, {e2}, {e3}")
+            # Collect error messages from all attempts
+            error_messages = []
+            # Assuming e1 and e2 would have been caught in preceding blocks if they existed
+            # Since they are not defined here, we'll just include e3
+            error_messages.append(f"page.evaluate_handle failed: {e3}")
+
+            raise Exception(f"All injection methods failed: {'; '.join(error_messages)}")
             
     except Exception as e:
         send_log(f"Failed to inject agent control overlay: {e}", "❌", log_type='status')
@@ -543,10 +559,14 @@ async def handle_browser_input(event_type: str, details: Dict) -> None:
 def _map_modifiers(details: Dict) -> int:
     """Maps modifier keys from frontend details to CDP modifier bitmask."""
     modifiers = 0
-    if details.get('altKey'): modifiers |= 1
-    if details.get('ctrlKey'): modifiers |= 2
-    if details.get('metaKey'): modifiers |= 4 # Command key on Mac
-    if details.get('shiftKey'): modifiers |= 8
+    if details.get('altKey'):
+        modifiers |= 1
+    if details.get('ctrlKey'):
+        modifiers |= 2
+    if details.get('metaKey'):
+        modifiers |= 4 # Command key on Mac
+    if details.get('shiftKey'):
+        modifiers |= 8
     return modifiers
 
 def set_screencast_running(running: bool = True) -> None:

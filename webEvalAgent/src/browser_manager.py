@@ -196,8 +196,10 @@ class PlaywrightBrowserManager:
             send_log(f"Failed to start CDP screencast: {e}", "❌", log_type='status')
             self.screencast_task_running = False
             if self.cdp_session:
-                 try: await self.cdp_session.detach()
-                 except: pass
+                 try:
+                     await self.cdp_session.detach()
+                 except Exception:
+                     pass
                  self.cdp_session = None
             return f"Opened {url}, but failed to start screen streaming."
 
@@ -289,8 +291,10 @@ class PlaywrightBrowserManager:
                 if "Target closed" in str(e) or "Session closed" in str(e) or "Connection closed" in str(e):
                     self.screencast_task_running = False # Mark as stopped
                     if self.cdp_session:
-                        try: await self.cdp_session.detach()
-                        except: pass
+                        try:
+                            await self.cdp_session.detach()
+                        except Exception:
+                            pass
                         self.cdp_session = None
 
 
@@ -433,17 +437,21 @@ class PlaywrightBrowserManager:
                 send_log("CDP session closed, stopping input handling", "⚠️", log_type='status')
                 self.screencast_task_running = False # Mark as stopped
                 if self.cdp_session:
-                    try: 
+                    try:
                         await self.cdp_session.detach()
-                    except: 
+                    except Exception:
                         pass
                     self.cdp_session = None
 
     def _map_modifiers(self, details: Dict) -> int:
         """Maps modifier keys from frontend details to CDP modifier bitmask."""
         modifiers = 0
-        if details.get('altKey'): modifiers |= 1
-        if details.get('ctrlKey'): modifiers |= 2
-        if details.get('metaKey'): modifiers |= 4 # Command key on Mac
-        if details.get('shiftKey'): modifiers |= 8
+        if details.get('altKey'):
+            modifiers |= 1
+        if details.get('ctrlKey'):
+            modifiers |= 2
+        if details.get('metaKey'):
+            modifiers |= 4 # Command key on Mac
+        if details.get('shiftKey'):
+            modifiers |= 8
         return modifiers

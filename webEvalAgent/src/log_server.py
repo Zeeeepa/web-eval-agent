@@ -215,7 +215,7 @@ def handle_browser_input_event(data):
     
     # Import the handle_browser_input function and other utilities from browser_utils
     try:
-        from .browser_utils import handle_browser_input, active_cdp_session, active_screencast_running, get_browser_task_loop
+        from .browser_utils import handle_browser_input, active_cdp_session, get_browser_task_loop
     except ImportError:
         error_msg = "Could not import handle_browser_input from browser_utils"
         send_log(f"Input error: {error_msg}", "❌", log_type='status')
@@ -240,7 +240,7 @@ def handle_browser_input_event(data):
         
         # send_log(f"Scheduling {event_type} input handler in browser task loop", "🔄", log_type='status')
         # Schedule the coroutine call
-        task = asyncio.run_coroutine_threadsafe(
+        asyncio.run_coroutine_threadsafe(
             handle_browser_input(event_type, details),
             loop
         )
@@ -278,7 +278,7 @@ def start_log_server(host='127.0.0.1', port=5009):
         os.makedirs(static_dir)
     
     # Create index.html if it's missing
-    index_path = os.path.join(template_dir, 'index.html')
+    # index_path = os.path.join(template_dir, 'index.html') # Variable assigned but never used
 
     # Start the server in a separate thread.
     # run_server uses host/port from the outer scope, so no args needed here.
