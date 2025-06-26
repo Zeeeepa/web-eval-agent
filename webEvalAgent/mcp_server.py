@@ -15,7 +15,7 @@ os.environ["ANONYMIZED_TELEMETRY"] = 'false'
 
 # MCP imports
 from mcp.server.fastmcp import FastMCP, Context
-from mcp.types import TextContent
+from mcp.types import TextContent, ImageContent
 # Removing the problematic import
 # from mcp.server.tool import Tool, register_tool
 
@@ -54,7 +54,7 @@ else:
     print("Error: No API key provided. Please set the OPERATIVE_API_KEY environment variable.")
 
 @mcp.tool(name=BrowserTools.WEB_EVAL_AGENT)
-async def web_eval_agent(url: str, task: str, ctx: Context, headless_browser: bool = False) -> list[TextContent]:
+async def web_eval_agent(url: str, task: str, ctx: Context, headless_browser: bool = False) -> list[list[TextContent | ImageContent]]:
     """Evaluate the user experience / interface of a web application.
 
     This tool allows the AI to assess the quality of user experience and interface design
@@ -84,7 +84,7 @@ async def web_eval_agent(url: str, task: str, ctx: Context, headless_browser: bo
         error_message_str = "❌ Error: API Key validation failed when running the tool.\n"
         error_message_str += "   Reason: Free tier limit reached.\n"
         error_message_str += "   👉 Please subscribe at https://operative.sh to continue."
-        return [TextContent(type="text", text=error_message_str)]
+        return [[TextContent(type="text", text=error_message_str)]]
     try:
         # Generate a new tool_call_id for this specific tool call
         tool_call_id = str(uuid.uuid4())
@@ -95,10 +95,10 @@ async def web_eval_agent(url: str, task: str, ctx: Context, headless_browser: bo
         )
     except Exception as e:
         tb = traceback.format_exc()
-        return [TextContent(
+        return [[TextContent(
             type="text",
             text=f"Error executing web_eval_agent: {str(e)}\n\nTraceback:\n{tb}"
-        )]
+        )]]
 
 @mcp.tool(name=BrowserTools.SETUP_BROWSER_STATE)
 async def setup_browser_state(url: str = None, ctx: Context = None) -> list[TextContent]:
