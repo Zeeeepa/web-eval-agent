@@ -40,7 +40,7 @@ def get_browser_manager() -> PlaywrightBrowserManager:
     """
     return PlaywrightBrowserManager.get_instance()
 
-async def handle_web_evaluation(arguments: Dict[str, Any], ctx: Context, api_key: str) -> list[list[TextContent | ImageContent]]:
+async def handle_web_evaluation(arguments: Dict[str, Any], ctx: Context, api_key: str) -> list[TextContent]:
     """Handle web_eval_agent tool calls
     
     This function evaluates the user experience of a web application by using
@@ -86,16 +86,16 @@ async def handle_web_evaluation(arguments: Dict[str, Any], ctx: Context, api_key
         send_log(f"Added https:// protocol to URL: {url}", "🔗")
     
     if not url or not isinstance(url, str):
-        return [[TextContent(
+        return [TextContent(
             type="text",
             text="Error: 'url' must be a non-empty string containing the web application URL to evaluate."
-        )]]
+        )]
         
     if not task or not isinstance(task, str):
-        return [[TextContent(
+        return [TextContent(
             type="text",
             text="Error: 'task' must be a non-empty string describing the UX/UI aspect to test."
-        )]]
+        )]
     
     # Send initial status to dashboard
     send_log(f"🚀 Received web evaluation task: {task}", "🚀")
