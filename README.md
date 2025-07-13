@@ -1,4 +1,4 @@
-# 🚀 operative.sh web-eval-agent MCP Server
+# 🚀 Web Eval Agent MCP Server (Gemini-Powered)
 
 > *Let the coding agent debug itself, you've got better things to do.*
 
@@ -8,11 +8,11 @@
 
 ## 🔥 Supercharge Your Debugging
 
-[operative.sh](https://www.operative.sh/mcp)'s MCP Server launches a browser-use powered agent to autonomously execute and debug web apps directly in your code editor.
+This MCP Server launches a Google Gemini-powered browser-use agent to autonomously execute and debug web apps directly in your code editor.
 
 ## ⚡ Features
 
-- 🌐 **Navigate your webapp** using BrowserUse (2x faster with operative backend)
+- 🌐 **Navigate your webapp** using BrowserUse powered by Google Gemini
 - 📊 **Capture network traffic** - requests are intelligently filtered and returned into the context window
 - 🚨 **Collect console errors** - captures logs & errors
 - 🤖 **Autonomous debugging** - the Cursor agent calls the web QA agent mcp server to test if the code it wrote works as epected end-to-end.
@@ -46,7 +46,7 @@ Evaluate my app at http://localhost:3000 – run web_eval_agent with the task "T
  - brew: `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
  - npm: (`brew install npm`)
  - jq: `brew install jq` 
-2. Run the installer after [getting an api key (free)](https://www.operative.sh/mcp)
+2. Get your Google Gemini API key from [Google AI Studio](https://aistudio.google.com/app/apikey)
    - Installs [playwright](https://github.com/microsoft/playwright) 
    - [Installs uv](https://astral.sh/)
    - Inserts JSON into your code editor (Cursor/Cline/Windsurf) for you! 
@@ -60,7 +60,7 @@ Test my app on http://localhost:3000. Use web-eval-agent.
 ```
 
 ## 🛠️ Manual Installation
-1. Get your API key at operative.sh/mcp
+1. Get your Google Gemini API key from [Google AI Studio](https://aistudio.google.com/app/apikey)
 2. [Install uv](https://docs.astral.sh/uv/#highlights)
 
 ```bash
@@ -101,7 +101,7 @@ npm install -g chromium playwright && uvx --with playwright playwright install -
         "webEvalAgent"
       ],
       "env": {
-        "OPERATIVE_API_KEY": "<YOUR_KEY>"
+        "GEMINI_API_KEY": "<YOUR_KEY>"
       }
     }
 ```

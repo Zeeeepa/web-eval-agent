@@ -29,7 +29,7 @@ from browser_use.browser.browser import Browser, BrowserConfig
 from browser_use.browser.context import BrowserContext  # Import BrowserContext
 
 # Langchain/MCP imports
-from langchain_anthropic import ChatAnthropic
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.globals import set_verbose
 
 # Original method will be stored here
@@ -1094,15 +1094,10 @@ async def run_browser_task(
             )  # Type: status
 
         # --- LLM Setup ---
-        from .env_utils import get_backend_url
-
-        llm = ChatAnthropic(
-            model="claude-3-5-sonnet-20240620",
-            base_url=get_backend_url("v1beta/models/claude-3-5-sonnet-20240620"),
-            extra_headers={
-                "x-operative-api-key": api_key,
-                "x-operative-tool-call-id": tool_call_id,
-            },
+        llm = ChatGoogleGenerativeAI(
+            model="gemini-1.5-pro",
+            google_api_key=api_key,
+            temperature=0.1,
         )
         send_log(
             f"LLM ({llm.model}) configured.", "🤖", log_type="status"

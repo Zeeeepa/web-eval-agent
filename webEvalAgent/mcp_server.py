@@ -9,8 +9,9 @@ from enum import Enum
 from webEvalAgent.src.utils import stop_log_server
 from webEvalAgent.src.log_server import send_log
 
-# Set the API key to a fake key to avoid error in backend
-os.environ["ANTHROPIC_API_KEY"] = 'not_a_real_key'
+# Set the Google API key for Gemini
+if 'GEMINI_API_KEY' in os.environ:
+    os.environ["GOOGLE_API_KEY"] = os.environ['GEMINI_API_KEY']
 os.environ["ANONYMIZED_TELEMETRY"] = 'false'
 
 # MCP imports
@@ -43,15 +44,15 @@ parser = argparse.ArgumentParser(description='Run the MCP server with browser de
 args = parser.parse_args()
 
 # Get API key from environment variable
-api_key = os.environ.get('OPERATIVE_API_KEY')
+api_key = os.environ.get('GEMINI_API_KEY')
 
 # Validate the API key
 if api_key:
     is_valid = asyncio.run(validate_api_key(api_key))
     if not is_valid:
-        print("Error: Invalid API key. Please provide a valid OperativeAI API key in the OPERATIVE_API_KEY environment variable.")
+        print("Error: Invalid API key. Please provide a valid Google Gemini API key in the GEMINI_API_KEY environment variable.")
 else:
-    print("Error: No API key provided. Please set the OPERATIVE_API_KEY environment variable.")
+    print("Error: No API key provided. Please set the GEMINI_API_KEY environment variable.")
 
 @mcp.tool(name=BrowserTools.WEB_EVAL_AGENT)
 async def web_eval_agent(url: str, task: str, ctx: Context, headless_browser: bool = False) -> list[TextContent]:
@@ -82,8 +83,8 @@ async def web_eval_agent(url: str, task: str, ctx: Context, headless_browser: bo
 
     if not is_valid:
         error_message_str = "❌ Error: API Key validation failed when running the tool.\n"
-        error_message_str += "   Reason: Free tier limit reached.\n"
-        error_message_str += "   👉 Please subscribe at https://operative.sh to continue."
+        error_message_str += "   Reason: Invalid or expired Gemini API key.\n"
+        error_message_str += "   👉 Please check your GEMINI_API_KEY at https://aistudio.google.com/app/apikey"
         return [TextContent(type="text", text=error_message_str)]
     try:
         # Generate a new tool_call_id for this specific tool call
@@ -121,8 +122,8 @@ async def setup_browser_state(url: str = None, ctx: Context = None) -> list[Text
 
     if not is_valid:
         error_message_str = "❌ Error: API Key validation failed when running the tool.\n"
-        error_message_str += "   Reason: Free tier limit reached.\n"
-        error_message_str += "   👉 Please subscribe at https://operative.sh to continue."
+        error_message_str += "   Reason: Invalid or expired Gemini API key.\n"
+        error_message_str += "   👉 Please check your GEMINI_API_KEY at https://aistudio.google.com/app/apikey"
         return [TextContent(type="text", text=error_message_str)]
     try:
         # Generate a new tool_call_id for this specific tool call
