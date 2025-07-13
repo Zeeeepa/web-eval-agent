@@ -18,7 +18,7 @@ startCommand:
       command: 'python',
       args: ['mcp_server.py'],
       env: {
-        OPERATIVE_API_KEY: config.operativeApiKey,
+        GEMINI_API_KEY: config.geminiApiKey,
         // You can add more environment variables here if necessary
       }
     })

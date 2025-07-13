@@ -43,7 +43,7 @@ RUN playwright install-deps
 COPY . .
 
 # Set environment variable for API key (should be overridden at runtime)
-ENV OPERATIVE_API_KEY="your_api_key_here"
+ENV GEMINI_API_KEY="your_api_key_here"
 
 # Run the MCP server
 CMD ["python", "mcp_server.py"]
