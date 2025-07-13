@@ -1,0 +1,30 @@
+# PR Analysis Pipeline Requirements
+
+# Core Framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+
+# Async and HTTP
+httpx==0.25.2
+aiofiles==23.2.1
+
+# Tool Integration (to be installed)
+# grainchain  # Local sandboxing
+# graph-sitter  # Static analysis
+# web-eval-agent  # UI testing
+
+# GitHub Integration
+PyGithub==1.59.1
+cryptography==41.0.8
+
+# Development and Testing
+pytest==7.4.3
+pytest-asyncio==0.21.1
+black==23.11.0
+flake8==6.1.0
+
+# Logging and Monitoring
+structlog==23.2.0
+prometheus-client==0.19.0
+
