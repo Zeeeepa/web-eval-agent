@@ -15,6 +15,10 @@ from enum import Enum
 
 logger = logging.getLogger(__name__)
 
+class ConfigurationError(Exception):
+    """Configuration error exception"""
+    pass
+
 class ServiceStatus(Enum):
     HEALTHY = "healthy"
     DEGRADED = "degraded"
@@ -102,7 +106,10 @@ class ConfigManager:
         """Load all service configurations from environment and files"""
         try:
             # GitHub Configuration
-            github_token = os.getenv("GITHUB_TOKEN", "github_pat_11BPJSHDQ0NtZCMz6IlJDQ_k9esx5zQWmzZ7kPfSP7hdoEVk04yyyNuuxlkN0bxBwlTAXQ5LXI")
+            github_token = os.getenv("GITHUB_TOKEN")
+            if not github_token:
+                raise ConfigurationError("GITHUB_TOKEN environment variable is required")
+            
             self._services["github"] = GitHubConfig(
                 name="github",
                 token=github_token,
@@ -110,10 +117,15 @@ class ConfigManager:
             )
             
             # Cloudflare Configuration
+            cloudflare_api_key = os.getenv("CLOUDFLARE_API_KEY")
+            cloudflare_account_id = os.getenv("CLOUDFLARE_ACCOUNT_ID")
+            if not cloudflare_api_key or not cloudflare_account_id:
+                raise ConfigurationError("CLOUDFLARE_API_KEY and CLOUDFLARE_ACCOUNT_ID environment variables are required")
+            
             self._services["cloudflare"] = CloudflareConfig(
                 name="cloudflare",
-                api_key=os.getenv("CLOUDFLARE_API_KEY", "eae82cf159577a8838cc83612104c09c5a0d6"),
-                account_id=os.getenv("CLOUDFLARE_ACCOUNT_ID", "2b2a1d3effa7f7fe4fe2a8c4e48681e3"),
+                api_key=cloudflare_api_key,
+                account_id=cloudflare_account_id,
                 worker_name=os.getenv("CLOUDFLARE_WORKER_NAME", "webhook-gateway"),
                 worker_url=os.getenv("CLOUDFLARE_WORKER_URL", "https://webhook-gateway.pixeliumperfecto.workers.dev")
             )
@@ -128,14 +140,22 @@ class ConfigManager:
             )
             
             # Codegen Configuration
+            codegen_api_token = os.getenv("CODEGEN_API_TOKEN")
+            codegen_org_id = os.getenv("CODEGEN_ORG_ID")
+            if not codegen_api_token or not codegen_org_id:
+                raise ConfigurationError("CODEGEN_API_TOKEN and CODEGEN_ORG_ID environment variables are required")
+            
             self._services["codegen"] = CodegenConfig(
                 name="codegen",
-                api_token=os.getenv("CODEGEN_API_TOKEN", "sk-ce027fa7-3c8d-4beb-8c86-ed8ae982ac99"),
-                org_id=os.getenv("CODEGEN_ORG_ID", "323")
+                api_token=codegen_api_token,
+                org_id=codegen_org_id
             )
             
             # Gemini Configuration
-            gemini_key = os.getenv("GEMINI_API_KEY", "AIzaSyBXmhlHudrD4zXiv-5fjxi1gGG-_kdtaZ0")
+            gemini_key = os.getenv("GEMINI_API_KEY")
+            if not gemini_key:
+                raise ConfigurationError("GEMINI_API_KEY environment variable is required")
+            
             self._services["gemini"] = GeminiConfig(
                 name="gemini",
                 api_key=gemini_key
