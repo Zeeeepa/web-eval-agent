@@ -3,5 +3,37 @@
 🧪 Ready for web-eval testing!
  * Serving Flask app 'app'
  * Debug mode: on
-Address already in use
-Port 5000 is in use by another program. Either identify and stop that program, or start the server with a different port.
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://172.20.20.49:5000
+[33mPress CTRL+C to quit[0m
+ * Restarting with stat
+🚀 Starting Example Web Application
+📍 Available at: http://localhost:5000
+🧪 Ready for web-eval testing!
+ * Debugger is active!
+ * Debugger PIN: 322-807-222
+127.0.0.1 - - [31/Jul/2025 23:32:02] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [31/Jul/2025 23:32:10] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [31/Jul/2025 23:32:15] "GET /counter HTTP/1.1" 200 -
+127.0.0.1 - - [31/Jul/2025 23:32:21] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [31/Jul/2025 23:32:25] "GET /counter HTTP/1.1" 200 -
+127.0.0.1 - - [31/Jul/2025 23:32:53] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [31/Jul/2025 23:32:56] "GET /forms HTTP/1.1" 200 -
+127.0.0.1 - - [31/Jul/2025 23:33:10] "[32mPOST /contact HTTP/1.1[0m" 302 -
+127.0.0.1 - - [31/Jul/2025 23:33:10] "GET /contact/success HTTP/1.1" 200 -
+127.0.0.1 - - [31/Jul/2025 23:33:14] "GET /forms HTTP/1.1" 200 -
+127.0.0.1 - - [31/Jul/2025 23:33:27] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [31/Jul/2025 23:33:31] "GET /todo HTTP/1.1" 200 -
+127.0.0.1 - - [31/Jul/2025 23:33:35] "[35m[1mPOST /api/todos HTTP/1.1[0m" 201 -
+127.0.0.1 - - [31/Jul/2025 23:33:40] "[35m[1mPOST /api/todos HTTP/1.1[0m" 201 -
+127.0.0.1 - - [31/Jul/2025 23:33:43] "PUT /api/todos/1 HTTP/1.1" 200 -
+127.0.0.1 - - [31/Jul/2025 23:33:47] "PUT /api/todos/2 HTTP/1.1" 200 -
+127.0.0.1 - - [31/Jul/2025 23:34:00] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [31/Jul/2025 23:34:04] "GET /forms HTTP/1.1" 200 -
+127.0.0.1 - - [31/Jul/2025 23:34:34] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [31/Jul/2025 23:34:37] "GET /forms HTTP/1.1" 200 -
+127.0.0.1 - - [31/Jul/2025 23:35:32] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [31/Jul/2025 23:36:07] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [31/Jul/2025 23:36:08] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
