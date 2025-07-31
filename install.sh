@@ -47,6 +47,85 @@ detect_os() {
     fi
 }
 
+# Function to install system dependencies
+install_system_deps() {
+    print_status "Installing system dependencies..."
+    
+    if [[ $(detect_os) == "linux" ]]; then
+        # Update package list
+        print_status "Updating package list..."
+        sudo apt-get update -qq
+        
+        # Install essential packages
+        print_status "Installing essential packages (curl, jq, build tools)..."
+        sudo apt-get install -y curl jq build-essential python3-dev python3-pip python3-venv
+        
+        print_success "System dependencies installed successfully"
+        
+    elif [[ $(detect_os) == "macos" ]]; then
+        # macOS
+        if command_exists brew; then
+            print_status "Installing dependencies via Homebrew..."
+            brew install curl jq python3
+            print_success "System dependencies installed successfully"
+        else
+            print_warning "Homebrew not found. Please install manually: curl, jq, python3"
+        fi
+    else
+        print_warning "Unsupported OS. Please install manually: curl, jq, python3, build tools"
+    fi
+}
+
+# Function to install UV (Python package manager)
+install_uv() {
+    print_status "Installing UV (Python package manager)..."
+    
+    if ! command_exists uv; then
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        
+        # Source the shell configuration to make uv available
+        if [[ -f "$HOME/.bashrc" ]]; then
+            source "$HOME/.bashrc" 2>/dev/null || true
+        fi
+        if [[ -f "$HOME/.zshrc" ]]; then
+            source "$HOME/.zshrc" 2>/dev/null || true
+        fi
+        
+        # Add to PATH for current session
+        export PATH="$HOME/.cargo/bin:$PATH"
+        
+        print_success "UV installed successfully"
+    else
+        print_status "UV already installed"
+    fi
+}
+
+# Function to install Node.js and npm
+install_nodejs() {
+    print_status "Checking Node.js and npm..."
+    
+    if ! command_exists node || ! command_exists npm; then
+        if [[ $(detect_os) == "linux" ]]; then
+            print_status "Installing Node.js and npm..."
+            curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+            sudo apt-get install -y nodejs
+            print_success "Node.js and npm installed successfully"
+        elif [[ $(detect_os) == "macos" ]]; then
+            if command_exists brew; then
+                print_status "Installing Node.js and npm via Homebrew..."
+                brew install node npm
+                print_success "Node.js and npm installed successfully"
+            else
+                print_warning "Please install Node.js and npm manually"
+            fi
+        else
+            print_warning "Please install Node.js and npm manually"
+        fi
+    else
+        print_status "Node.js and npm already installed"
+    fi
+}
+
 # Function to install Python dependencies
 install_python_deps() {
     print_status "Installing Python dependencies..."
@@ -73,16 +152,42 @@ install_python_deps() {
 install_playwright() {
     print_status "Installing Playwright browsers..."
     
-    # Install playwright browsers
-    python -m playwright install chromium
+    # Install Playwright globally via npm if available
+    if command_exists npm; then
+        print_status "Installing Playwright via npm..."
+        npm install -g playwright chromium 2>/dev/null || {
+            print_warning "Could not install Playwright globally via npm, trying alternative method..."
+        }
+    fi
     
-    # Install system dependencies for playwright (Linux only)
+    # Install playwright browsers using Python
+    if command_exists python3; then
+        python3 -m playwright install chromium
+    elif command_exists python; then
+        python -m playwright install chromium
+    fi
+    
+    # Install system dependencies for playwright with enhanced method
     if [[ $(detect_os) == "linux" ]]; then
         print_status "Installing system dependencies for Playwright..."
-        python -m playwright install-deps chromium || {
-            print_warning "Could not install system dependencies automatically."
-            print_warning "You may need to install them manually if you encounter issues."
-        }
+        
+        # Try the enhanced uvx method first
+        if command_exists uv; then
+            print_status "Using UV to install Playwright with dependencies..."
+            uvx --with playwright playwright install --with-deps 2>/dev/null || {
+                print_warning "UV method failed, trying standard method..."
+                python3 -m playwright install-deps chromium || {
+                    print_warning "Could not install system dependencies automatically."
+                    print_warning "You may need to install them manually if you encounter issues."
+                }
+            }
+        else
+            # Fallback to standard method
+            python3 -m playwright install-deps chromium || {
+                print_warning "Could not install system dependencies automatically."
+                print_warning "You may need to install them manually if you encounter issues."
+            }
+        fi
     fi
     
     print_success "Playwright browsers installed successfully"
@@ -216,6 +321,15 @@ main() {
         mv requirements-new.txt requirements.txt
     fi
     
+    # Install system dependencies first
+    install_system_deps
+    
+    # Install UV (Python package manager)
+    install_uv
+    
+    # Install Node.js and npm
+    install_nodejs
+    
     # Install Python dependencies
     install_python_deps
     
@@ -234,10 +348,20 @@ main() {
     echo ""
     print_success "🎉 Installation completed successfully!"
     echo ""
+    echo "✅ Installed components:"
+    echo "   • System dependencies (curl, jq, build tools)"
+    echo "   • UV (Python package manager)"
+    echo "   • Node.js and npm"
+    echo "   • Python dependencies"
+    echo "   • Playwright browsers with system dependencies"
+    echo ""
     echo "Next steps:"
     echo "1. Set your Gemini API key: export GEMINI_API_KEY='your_key'"
     echo "2. Test the installation: web-eval --version"
     echo "3. Run a test: web-eval --url http://localhost:3000 --instructions INSTRUCTIONS.md"
+    echo ""
+    echo "💡 Pro tip: The installation includes UV for faster Python package management"
+    echo "   and enhanced Playwright setup for reliable browser automation."
     echo ""
     echo "For more information, see the README.md file."
     echo ""
