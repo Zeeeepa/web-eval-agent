@@ -1,0 +1,31 @@
+# Core dependencies for Web Eval Agent CLI
+browser-use==0.1.40
+google-genai>=1.7.0
+google-generativeai>=0.8.4
+langchain>=0.3.21
+langchain-google-genai>=2.0.10
+playwright>=1.41.0
+python-dotenv>=1.1.0
+pyyaml>=6.0.2
+
+# CLI and utilities
+click>=8.1.8
+argparse
+
+# HTTP and networking
+requests>=2.32.3
+httpx>=0.28.1
+
+# Data processing
+beautifulsoup4>=4.13.3
+markdownify>=0.14.1
+
+# Async support
+asyncio
+aiohttp>=3.9.0
+
+# Logging and monitoring
+loguru>=0.7.0
+
+# Development and testing
+ruff>=0.11.9
