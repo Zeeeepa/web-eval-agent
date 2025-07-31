@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block title %}Counter - Web Eval Test App{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">
+                    <i class="fas fa-calculator"></i> Interactive Counter
+                </h3>
+            </div>
+            <div class="card-body text-center">
+                <div class="mb-4">
+                    <h1 class="counter-display" id="counter-value">{{ counter }}</h1>
+                    <p class="text-muted">Current counter value</p>
+                </div>
+                
+                <form method="POST" class="d-inline">
+                    <div class="btn-group" role="group">
+                        <button type="submit" name="action" value="decrement" 
+                                class="btn btn-danger btn-counter" id="decrement-btn">
+                            <i class="fas fa-minus"></i> Decrement
+                        </button>
+                        
+                        <button type="submit" name="action" value="reset" 
+                                class="btn btn-warning btn-counter" id="reset-btn">
+                            <i class="fas fa-undo"></i> Reset
+                        </button>
+                        
+                        <button type="submit" name="action" value="increment" 
+                                class="btn btn-success btn-counter" id="increment-btn">
+                            <i class="fas fa-plus"></i> Increment
+                        </button>
+                    </div>
+                </form>
+                
+                <div class="mt-4">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h5 class="card-title">Status</h5>
+                                    <p class="card-text" id="counter-status">
+                                        {% if counter == 0 %}
+                                            <span class="badge bg-secondary">Zero</span>
+                                        {% elif counter > 0 %}
+                                            <span class="badge bg-success">Positive</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Negative</span>
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h5 class="card-title">Absolute Value</h5>
+                                    <p class="card-text">
+                                        <span class="badge bg-info">{{ counter|abs }}</span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h5 class="card-title">Even/Odd</h5>
+                                    <p class="card-text">
+                                        {% if counter % 2 == 0 %}
+                                            <span class="badge bg-primary">Even</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">Odd</span>
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Testing Instructions -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle"></i> Testing Instructions
+                </h5>
+            </div>
+            <div class="card-body">
+                <p>This counter demonstrates basic button interactions and state management:</p>
+                <ul>
+                    <li><strong>Increment:</strong> Increases the counter by 1</li>
+                    <li><strong>Decrement:</strong> Decreases the counter by 1</li>
+                    <li><strong>Reset:</strong> Sets the counter back to 0</li>
+                </ul>
+                
+                <div class="alert alert-info">
+                    <strong>For web-eval testing:</strong> Try clicking each button multiple times 
+                    and verify that the counter value updates correctly. The status badges should 
+                    also update to reflect the current state.
+                </div>
+                
+                <h6>Test Scenarios:</h6>
+                <ol>
+                    <li>Click increment 5 times - counter should be 5</li>
+                    <li>Click decrement 3 times - counter should be 2</li>
+                    <li>Click reset - counter should be 0</li>
+                    <li>Click decrement 2 times - counter should be -2</li>
+                    <li>Verify status badges update correctly</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const counterValue = document.getElementById('counter-value');
+        const buttons = document.querySelectorAll('.btn-counter');
+        
+        // Add click animations
+        buttons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Add loading state
+                const originalText = this.innerHTML;
+                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+                this.disabled = true;
+                
+                // Re-enable after form submission (this won't actually run due to page reload)
+                setTimeout(() => {
+                    this.innerHTML = originalText;
+                    this.disabled = false;
+                }, 1000);
+            });
+        });
+        
+        // Add counter animation effect
+        counterValue.addEventListener('animationend', function() {
+            this.classList.remove('animate');
+        });
+        
+        // Log counter interactions for testing
+        console.log('Counter page loaded with value:', counterValue.textContent);
+        
+        // Add keyboard shortcuts for testing
+        document.addEventListener('keydown', function(e) {
+            if (e.key === '+' || e.key === '=') {
+                document.getElementById('increment-btn').click();
+            } else if (e.key === '-') {
+                document.getElementById('decrement-btn').click();
+            } else if (e.key === 'r' || e.key === 'R') {
+                document.getElementById('reset-btn').click();
+            }
+        });
+        
+        console.log('Keyboard shortcuts enabled: +/- for increment/decrement, R for reset');
+    });
+</script>
+
+<style>
+    .counter-display {
+        transition: all 0.3s ease;
+    }
+    
+    .counter-display.animate {
+        transform: scale(1.1);
+        color: #28a745;
+    }
+    
+    .btn-counter:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    
+    .btn-counter:active {
+        transform: translateY(0);
+    }
+</style>
+{% endblock %}

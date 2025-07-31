@@ -1,0 +1,285 @@
+{% extends "base.html" %}
+
+{% block title %}Todo List - Web Eval Test App{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h3 class="mb-0">
+                    <i class="fas fa-tasks"></i> Todo List Application
+                </h3>
+            </div>
+            <div class="card-body">
+                <!-- Add Todo Form -->
+                <form id="add-todo-form" class="mb-4">
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="todo-input" 
+                               placeholder="Enter a new todo item..." required>
+                        <button type="submit" class="btn btn-success" id="add-btn">
+                            <i class="fas fa-plus"></i> Add Todo
+                        </button>
+                    </div>
+                </form>
+                
+                <!-- Todo List -->
+                <div id="todo-list">
+                    {% if todos %}
+                        {% for todo in todos %}
+                        <div class="todo-item {{ 'completed' if todo.completed }}" data-id="{{ todo.id }}">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="form-check">
+                                    <input class="form-check-input todo-checkbox" type="checkbox" 
+                                           {{ 'checked' if todo.completed }} data-id="{{ todo.id }}">
+                                    <label class="form-check-label todo-text">
+                                        {{ todo.text }}
+                                    </label>
+                                </div>
+                                <button class="btn btn-danger btn-sm delete-btn" data-id="{{ todo.id }}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                            <small class="text-muted">Created: {{ todo.created_at }}</small>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center text-muted py-4" id="empty-state">
+                            <i class="fas fa-clipboard-list fa-3x mb-3"></i>
+                            <p>No todos yet. Add one above to get started!</p>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Todo Stats -->
+                <div class="row mt-4">
+                    <div class="col-md-4">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h5 class="card-title">Total</h5>
+                                <span class="badge bg-primary fs-6" id="total-count">{{ todos|length }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h5 class="card-title">Completed</h5>
+                                <span class="badge bg-success fs-6" id="completed-count">
+                                    {{ todos|selectattr('completed')|list|length }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h5 class="card-title">Remaining</h5>
+                                <span class="badge bg-warning fs-6" id="remaining-count">
+                                    {{ todos|rejectattr('completed')|list|length }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Testing Instructions -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle"></i> Todo Testing Instructions
+                </h5>
+            </div>
+            <div class="card-body">
+                <h6>Test Scenarios:</h6>
+                <ol>
+                    <li>Add a new todo item</li>
+                    <li>Mark a todo as completed by checking the checkbox</li>
+                    <li>Uncheck a completed todo</li>
+                    <li>Delete a todo item</li>
+                    <li>Verify the stats update correctly</li>
+                </ol>
+                
+                <div class="alert alert-info">
+                    <strong>For web-eval testing:</strong> This todo list uses AJAX requests 
+                    to add, update, and delete items without page reloads. Test the real-time 
+                    updates and verify no console errors occur.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const addForm = document.getElementById('add-todo-form');
+        const todoInput = document.getElementById('todo-input');
+        const todoList = document.getElementById('todo-list');
+        const addBtn = document.getElementById('add-btn');
+        
+        // Add new todo
+        addForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const text = todoInput.value.trim();
+            
+            if (!text) return;
+            
+            // Show loading state
+            addBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';
+            addBtn.disabled = true;
+            
+            try {
+                const response = await fetch('/api/todos', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ text: text })
+                });
+                
+                if (response.ok) {
+                    const todo = await response.json();
+                    addTodoToDOM(todo);
+                    todoInput.value = '';
+                    updateStats();
+                    removeEmptyState();
+                } else {
+                    console.error('Failed to add todo');
+                }
+            } catch (error) {
+                console.error('Error adding todo:', error);
+            } finally {
+                addBtn.innerHTML = '<i class="fas fa-plus"></i> Add Todo';
+                addBtn.disabled = false;
+            }
+        });
+        
+        // Handle todo interactions
+        todoList.addEventListener('click', async function(e) {
+            const todoId = e.target.dataset.id;
+            
+            if (e.target.classList.contains('todo-checkbox')) {
+                // Toggle completion
+                const completed = e.target.checked;
+                await updateTodo(todoId, { completed: completed });
+                updateTodoDisplay(todoId, completed);
+                updateStats();
+            } else if (e.target.classList.contains('delete-btn') || e.target.parentElement.classList.contains('delete-btn')) {
+                // Delete todo
+                if (confirm('Are you sure you want to delete this todo?')) {
+                    await deleteTodo(todoId);
+                    removeTodoFromDOM(todoId);
+                    updateStats();
+                    checkEmptyState();
+                }
+            }
+        });
+        
+        async function updateTodo(id, data) {
+            try {
+                const response = await fetch(`/api/todos/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                if (!response.ok) {
+                    console.error('Failed to update todo');
+                }
+            } catch (error) {
+                console.error('Error updating todo:', error);
+            }
+        }
+        
+        async function deleteTodo(id) {
+            try {
+                const response = await fetch(`/api/todos/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (!response.ok) {
+                    console.error('Failed to delete todo');
+                }
+            } catch (error) {
+                console.error('Error deleting todo:', error);
+            }
+        }
+        
+        function addTodoToDOM(todo) {
+            const todoElement = document.createElement('div');
+            todoElement.className = 'todo-item';
+            todoElement.dataset.id = todo.id;
+            todoElement.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="form-check">
+                        <input class="form-check-input todo-checkbox" type="checkbox" data-id="${todo.id}">
+                        <label class="form-check-label todo-text">
+                            ${todo.text}
+                        </label>
+                    </div>
+                    <button class="btn btn-danger btn-sm delete-btn" data-id="${todo.id}">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+                <small class="text-muted">Created: ${todo.created_at}</small>
+            `;
+            todoList.appendChild(todoElement);
+        }
+        
+        function removeTodoFromDOM(id) {
+            const todoElement = document.querySelector(`[data-id="${id}"]`);
+            if (todoElement) {
+                todoElement.remove();
+            }
+        }
+        
+        function updateTodoDisplay(id, completed) {
+            const todoElement = document.querySelector(`[data-id="${id}"]`);
+            if (todoElement) {
+                if (completed) {
+                    todoElement.classList.add('completed');
+                } else {
+                    todoElement.classList.remove('completed');
+                }
+            }
+        }
+        
+        function updateStats() {
+            const todos = document.querySelectorAll('.todo-item');
+            const completed = document.querySelectorAll('.todo-item.completed');
+            
+            document.getElementById('total-count').textContent = todos.length;
+            document.getElementById('completed-count').textContent = completed.length;
+            document.getElementById('remaining-count').textContent = todos.length - completed.length;
+        }
+        
+        function removeEmptyState() {
+            const emptyState = document.getElementById('empty-state');
+            if (emptyState) {
+                emptyState.remove();
+            }
+        }
+        
+        function checkEmptyState() {
+            const todos = document.querySelectorAll('.todo-item');
+            if (todos.length === 0) {
+                todoList.innerHTML = `
+                    <div class="text-center text-muted py-4" id="empty-state">
+                        <i class="fas fa-clipboard-list fa-3x mb-3"></i>
+                        <p>No todos yet. Add one above to get started!</p>
+                    </div>
+                `;
+            }
+        }
+        
+        console.log('Todo application loaded');
+        console.log('AJAX functionality enabled');
+    });
+</script>
+{% endblock %}

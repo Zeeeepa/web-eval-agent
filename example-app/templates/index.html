@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Web Eval Test App{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="jumbotron bg-primary text-white p-5 rounded mb-4">
+            <h1 class="display-4">
+                <i class="fas fa-flask"></i> Welcome to Web Eval Test App!
+            </h1>
+            <p class="lead">
+                A comprehensive testing application designed to validate the <strong>web-eval</strong> CLI tool.
+                This app contains various interactive features, forms, and components to test browser automation.
+            </p>
+            <hr class="my-4">
+            <p>
+                Current counter value: <span class="badge bg-light text-dark fs-4">{{ counter }}</span>
+            </p>
+            <a class="btn btn-light btn-lg" href="{{ url_for('counter_page') }}" role="button">
+                <i class="fas fa-calculator"></i> Try the Counter
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12 mb-4">
+        <h2><i class="fas fa-rocket"></i> Available Features</h2>
+        <p class="text-muted">
+            Explore different sections of the application to test various web interactions:
+        </p>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Counter Feature -->
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card feature-card h-100">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-calculator fa-3x text-primary"></i>
+                </div>
+                <h5 class="card-title">Interactive Counter</h5>
+                <p class="card-text">
+                    Test button interactions with increment, decrement, and reset functionality.
+                    Perfect for testing click events and state management.
+                </p>
+                <a href="{{ url_for('counter_page') }}" class="btn btn-primary">
+                    <i class="fas fa-play"></i> Try Counter
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Forms Feature -->
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card feature-card h-100">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-edit fa-3x text-success"></i>
+                </div>
+                <h5 class="card-title">Form Testing</h5>
+                <p class="card-text">
+                    Test various form types including contact forms, validation, 
+                    and error handling. Includes required fields and email validation.
+                </p>
+                <a href="{{ url_for('forms_page') }}" class="btn btn-success">
+                    <i class="fas fa-edit"></i> Test Forms
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Todo Feature -->
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card feature-card h-100">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-tasks fa-3x text-info"></i>
+                </div>
+                <h5 class="card-title">Todo Application</h5>
+                <p class="card-text">
+                    Interactive todo list with AJAX operations. Test adding, completing,
+                    and deleting tasks with real-time updates.
+                </p>
+                <a href="{{ url_for('todo_page') }}" class="btn btn-info">
+                    <i class="fas fa-tasks"></i> Manage Todos
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Authentication -->
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card feature-card h-100">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-user-shield fa-3x text-warning"></i>
+                </div>
+                <h5 class="card-title">User Authentication</h5>
+                <p class="card-text">
+                    Test user registration, login, and session management.
+                    Includes form validation and protected routes.
+                </p>
+                {% if session.user %}
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-warning">
+                        <i class="fas fa-user"></i> Dashboard
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('register') }}" class="btn btn-warning">
+                        <i class="fas fa-user-plus"></i> Register
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Interactive Elements -->
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card feature-card h-100">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-mouse-pointer fa-3x text-danger"></i>
+                </div>
+                <h5 class="card-title">Interactive Elements</h5>
+                <p class="card-text">
+                    Test various interactive components including buttons, dropdowns,
+                    AJAX calls, and dynamic content loading.
+                </p>
+                <a href="{{ url_for('interactive_page') }}" class="btn btn-danger">
+                    <i class="fas fa-mouse-pointer"></i> Interact
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Testing -->
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card feature-card h-100">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <i class="fas fa-window-restore fa-3x text-secondary"></i>
+                </div>
+                <h5 class="card-title">Modal Dialogs</h5>
+                <p class="card-text">
+                    Test modal dialogs, popups, and overlay interactions.
+                    Perfect for testing complex UI interactions.
+                </p>
+                <a href="{{ url_for('modal_test') }}" class="btn btn-secondary">
+                    <i class="fas fa-window-restore"></i> Test Modals
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Testing Instructions -->
+<div class="row mt-5">
+    <div class="col-12">
+        <div class="card bg-light">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-info-circle"></i> Testing Instructions
+                </h5>
+                <p class="card-text">
+                    This application is designed to test the <strong>web-eval</strong> CLI tool. 
+                    Each section contains different interactive elements that can be automated and validated.
+                </p>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-check-circle text-success"></i> What to Test:</h6>
+                        <ul>
+                            <li>Button clicks and form submissions</li>
+                            <li>Input validation and error handling</li>
+                            <li>AJAX requests and dynamic content</li>
+                            <li>Navigation between pages</li>
+                            <li>Modal dialogs and overlays</li>
+                            <li>User authentication flows</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-terminal text-primary"></i> Run web-eval:</h6>
+                        <pre class="bg-dark text-light p-2 rounded"><code>web-eval --url http://localhost:5000 \
+  --instructions test-instructions.md \
+  --output report.html</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Add some interactive behavior to the homepage
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add hover effects to feature cards
+        const cards = document.querySelectorAll('.feature-card');
+        cards.forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.boxShadow = '0 8px 16px rgba(0,0,0,0.2)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.boxShadow = '';
+            });
+        });
+        
+        // Log page load for testing
+        console.log('Homepage loaded with', cards.length, 'feature cards');
+        
+        // Simulate some user activity for testing
+        setTimeout(() => {
+            console.log('Homepage fully interactive after 1 second');
+        }, 1000);
+    });
+</script>
+{% endblock %}
