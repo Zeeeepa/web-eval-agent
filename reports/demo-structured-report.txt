@@ -1,0 +1,90 @@
+┌─────────────────────────────────────────────────────────────────┐
+│                        TEST EXECUTION SUMMARY                   │
+├─────────────────────────────────────────────────────────────────┤
+│ Test URL:           https://example.com                      │
+│ Test Duration:      45.7 seconds                          │
+│ Tests Executed:     5                                        │
+│ Tests Passed:       4                                        │
+│ Tests Failed:       1                                        │
+│ Success Rate:       80%                                     │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                           TEST RESULTS                          │
+└─────────────────────────────────────────────────────────────────┘
+
+✅ Test 1: Page Load Test
+   Duration: 8.2 seconds
+   Status: PASSED
+   Details: Page loaded successfully within timeout
+   
+✅ Test 2: Navigation Test  
+   Duration: 12.5 seconds
+   Status: PASSED
+   Details: All navigation elements are functional
+   
+✅ Test 3: Content Verification
+   Duration: 6.8 seconds
+   Status: PASSED
+   Details: Main content is properly displayed
+   
+❌ Test 4: Basic Interaction Test
+   Duration: 15.3 seconds
+   Status: FAILED
+   Details: Contact form submission failed - validation error
+   Error: Required field 'email' is missing validation
+   
+✅ Test 5: Responsive Design Check
+   Duration: 2.9 seconds
+   Status: PASSED
+   Details: Layout adapts correctly to different screen sizes
+
+┌─────────────────────────────────────────────────────────────────┐
+│                        PERFORMANCE METRICS                      │
+├─────────────────────────────────────────────────────────────────┤
+│ Page Load Time:     2.3 seconds                                │
+│ First Paint:        1.1 seconds                                │
+│ DOM Ready:          1.8 seconds                                │
+│ Total Resources:    24 files                                   │
+│ Page Size:          1.2 MB                                     │
+│ JavaScript Errors:  1 error found                             │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                           RECOMMENDATIONS                       │
+└─────────────────────────────────────────────────────────────────┘
+
+🔧 CRITICAL ISSUES:
+   • Fix email validation in contact form
+   • Address JavaScript error in navigation menu
+
+⚡ PERFORMANCE IMPROVEMENTS:
+   • Optimize image sizes to reduce page load time
+   • Consider lazy loading for below-fold content
+
+♿ ACCESSIBILITY:
+   • Add alt text to decorative images
+   • Improve color contrast for better readability
+
+🎯 USER EXPERIENCE:
+   • Add loading indicators for form submissions
+   • Implement better error messaging
+
+┌─────────────────────────────────────────────────────────────────┐
+│                        CONFIGURATION DETAILS                    │
+├─────────────────────────────────────────────────────────────────┤
+│ Browser:            Chromium                                    │
+│ Viewport:           1280x720                                   │
+│ User Agent:         Chrome/120.0.0.0                          │
+│ Test Environment:   Headless Mode                             │
+│ Timeout:            300 seconds                               │
+│ Generated:          2025-08-01 08:56:35                        │
+└─────────────────────────────────────────────────────────────────┘
+
+📊 SUMMARY:
+This evaluation identified 1 critical issue that should be addressed immediately.
+The website performs well overall with good responsive design and navigation.
+Focus on fixing the form validation to improve user experience.
+
+Report generated by Web Eval Agent v2.0.0
+For more information, visit: https://github.com/Zeeeepa/web-eval-agent

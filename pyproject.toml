@@ -48,7 +48,7 @@ dev = [
 ]
 
 [project.scripts]
-web-eval = "web_eval.cli:main"
+web-eval = "web_eval_agent.core.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/Zeeeepa/web-eval-agent"
@@ -61,11 +61,11 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
-where = ["."]
-include = ["web_eval*"]
+where = ["src"]
+include = ["web_eval_agent*"]
 
 [tool.setuptools.package-data]
-web_eval = ["templates/**/*", "examples/**/*"]
+web_eval_agent = ["templates/**/*", "examples/**/*"]
 
 [tool.ruff]
 line-length = 100
