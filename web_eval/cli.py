@@ -50,15 +50,15 @@ Examples:
     # Optional arguments
     parser.add_argument(
         "--output",
-        default="web-eval-report.html",
-        help="Output file for the test report (default: web-eval-report.html)"
+        default="web-eval-report.txt",
+        help="Output file for the test report (default: web-eval-report.txt)"
     )
     
     parser.add_argument(
         "--format",
         choices=["html", "json", "text"],
-        default="html",
-        help="Report format (default: html)"
+        default="text",
+        help="Report format (default: text - comprehensive format with emojis)"
     )
     
     parser.add_argument(

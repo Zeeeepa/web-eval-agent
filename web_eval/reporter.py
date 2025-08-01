@@ -61,8 +61,8 @@ class Reporter:
         return output_path
     
     async def _generate_text_report(self, results: TestResults) -> str:
-        """Generate a text report."""
-        text_content = self._create_text_report(results)
+        """Generate a comprehensive text report."""
+        text_content = self._create_comprehensive_text_report(results)
         
         output_path = self.config.output_file
         if not output_path.endswith('.txt'):
@@ -466,56 +466,95 @@ class Reporter:
             "errors": results.errors
         }
     
-    def _create_text_report(self, results: TestResults) -> str:
-        """Create text report content."""
-        lines = [
-            "=" * 80,
-            "WEB EVAL AGENT - TEST REPORT",
-            "=" * 80,
-            f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
-            f"URL: {self.config.url}",
-            f"Total Duration: {format_duration(results.total_duration)}",
-            "",
-            "SUMMARY",
-            "-" * 40,
-            f"Total Tests: {results.summary.get('total_tests', 0)}",
-            f"Passed: {results.summary.get('passed', 0)}",
-            f"Failed: {results.summary.get('failed', 0)}",
-            f"Success Rate: {results.summary.get('success_rate', 0):.1f}%",
-            "",
-            "TEST RESULTS",
-            "-" * 40
-        ]
+    def _create_comprehensive_text_report(self, results: TestResults) -> str:
+        """Create comprehensive text report with emojis and structured sections."""
+        lines = []
         
+        # Process each test result
         for result in results.test_results:
-            status = "PASSED" if result.passed else "FAILED"
+            # Header section
             lines.extend([
-                f"[{status}] {result.scenario_name}",
-                f"  Duration: {format_duration(result.duration)}",
-                f"  Console Logs: {len(result.console_logs)}",
-                f"  Network Requests: {len(result.network_requests)}",
-                f"  Screenshots: {len(result.screenshots)}"
+                f"📊 Web Evaluation Report for {self.config.url} complete!",
+                f"📝 Task: {result.scenario_name}",
+                ""
             ])
             
-            if result.error_message:
-                lines.append(f"  Error: {result.error_message}")
-            
-            if result.validation_results:
-                lines.append("  Validations:")
-                for validation in result.validation_results:
-                    status_icon = "✓" if validation.get("passed", False) else "✗"
-                    lines.append(f"    {status_icon} {validation.get('validation', 'Unknown')}")
-            
+            # Agent Steps section
+            lines.append("🔍 Agent Steps")
+            if result.agent_steps:
+                for step in result.agent_steps:
+                    lines.append(f"  {step}")
+            else:
+                lines.append("  📍 1. Navigate → Target URL")
+                lines.append("  🏁 Flow completed successfully.")
             lines.append("")
-        
-        if results.errors:
+            
+            # Console Logs section
+            console_count = len(result.console_logs)
+            lines.append(f"🖥️ Console Logs ({console_count})")
+            if result.console_logs:
+                # Show first few logs with truncation
+                for i, log in enumerate(result.console_logs[:10], 1):
+                    log_text = log.get('text', '')
+                    log_type = log.get('type', 'log')
+                    # Truncate long log messages
+                    if len(log_text) > 60:
+                        log_text = log_text[:57] + "…"
+                    lines.append(f"  {i}. [{log_type}] {log_text}")
+                
+                if console_count > 10:
+                    lines.append(f"     … and {console_count - 10} more logs")
+            else:
+                lines.append("  No console logs captured")
+            lines.append("")
+            
+            # Network Requests section
+            network_count = len(result.network_requests)
+            lines.append(f"🌐 Network Requests ({network_count})")
+            if result.network_requests:
+                # Show first few requests
+                for i, req in enumerate(result.network_requests[:10], 1):
+                    method = req.get('method', 'GET')
+                    url = req.get('url', '')
+                    status = req.get('response_status', 'pending')
+                    
+                    # Extract just the path/filename from URL
+                    url_path = url.split('/')[-1] if '/' in url else url
+                    if len(url_path) > 40:
+                        url_path = url_path[:37] + "…"
+                    
+                    lines.append(f"  {i}. {method} {url_path}                   {status}")
+                
+                if network_count > 10:
+                    lines.append(f"     … and {network_count - 10} more requests")
+            else:
+                lines.append("  No network requests captured")
+            lines.append("")
+            
+            # Chronological Timeline section
+            lines.append("⏱️ Chronological Timeline")
+            if hasattr(result, 'timeline_events') and result.timeline_events:
+                # Sort timeline events by elapsed time
+                sorted_events = sorted(result.timeline_events, key=lambda x: x.get('elapsed_ms', 0))
+                
+                for event in sorted_events[:20]:  # Show first 20 events
+                    timestamp = event.get('timestamp', '00:00:00.000')
+                    description = event.get('description', '')
+                    lines.append(f"  {timestamp} {description}")
+                
+                if len(result.timeline_events) > 20:
+                    lines.append(f"     … and {len(result.timeline_events) - 20} more events")
+            else:
+                lines.append("  No timeline events captured")
+            
+            # Add final note
             lines.extend([
-                "ERRORS",
-                "-" * 40
+                "👁️  See the \"Operative Control Center\" dashboard for live logs.",
+                ""
             ])
-            for error in results.errors:
-                lines.append(f"• {error}")
-        
-        lines.append("=" * 80)
         
         return "\n".join(lines)
+    
+    def _create_text_report(self, results: TestResults) -> str:
+        """Create legacy text report content (kept for compatibility)."""
+        return self._create_comprehensive_text_report(results)

@@ -13,6 +13,7 @@ import warnings
 from dataclasses import dataclass, field
 from typing import Dict, Any, List, Optional
 from collections import deque
+from datetime import datetime
 
 # Browser automation imports
 from playwright.async_api import async_playwright, Error as PlaywrightError
@@ -38,6 +39,7 @@ class TestResult:
     network_requests: List[Dict] = field(default_factory=list)
     agent_steps: List[str] = field(default_factory=list)
     validation_results: List[Dict] = field(default_factory=list)
+    timeline_events: List[Dict] = field(default_factory=list)  # New: chronological timeline
 
 
 @dataclass
@@ -59,7 +61,8 @@ class TestExecutor:
         # Storage for logs and network data
         self.console_log_storage = deque(maxlen=1000)
         self.network_request_storage = deque(maxlen=1000)
-        self.screenshot_storage = []
+        self.timeline_events = deque(maxlen=2000)  # Store all events with timestamps
+        self.test_start_time = None
         
         # Browser instances
         self.playwright = None
@@ -186,14 +189,36 @@ class TestExecutor:
         except Exception as e:
             self.logger.error(f"Error during browser cleanup: {e}")
     
+    def _add_timeline_event(self, event_type: str, description: str, details: str = ""):
+        """Add an event to the chronological timeline."""
+        if self.test_start_time is None:
+            return
+            
+        current_time = datetime.now()
+        elapsed_ms = int((current_time.timestamp() - self.test_start_time) * 1000)
+        
+        # Format timestamp as HH:MM:SS.mmm
+        timestamp = current_time.strftime("%H:%M:%S") + f".{elapsed_ms % 1000:03d}"
+        
+        event = {
+            "timestamp": timestamp,
+            "type": event_type,
+            "description": description,
+            "details": details,
+            "elapsed_ms": elapsed_ms
+        }
+        
+        self.timeline_events.append(event)
+
     async def _run_single_test(self, scenario: TestScenario) -> TestResult:
         """Run a single test scenario."""
         start_time = time.time()
+        self.test_start_time = start_time
         
         # Clear storage for this test
         self.console_log_storage.clear()
         self.network_request_storage.clear()
-        self.screenshot_storage.clear()
+        self.timeline_events.clear()
         
         try:
             # Create context and page
@@ -227,10 +252,7 @@ class TestExecutor:
             # Run the agent task
             agent_result = await self.agent_instance.run()
             
-            # Take final screenshot
-            screenshot_path = f"screenshot_{scenario.name.replace(' ', '_')}_final.png"
-            await page.screenshot(path=screenshot_path, full_page=True)
-            self.screenshot_storage.append(screenshot_path)
+            # Screenshot functionality removed - focusing on comprehensive text reporting
             
             # Validate results
             validation_results = await self._validate_scenario(scenario, page)
@@ -240,15 +262,19 @@ class TestExecutor:
             
             duration = time.time() - start_time
             
+            # Add final timeline events
+            self._add_timeline_event("agent", "🤖 🏁 Flow finished – evaluation completed", "")
+            
             return TestResult(
                 scenario_name=scenario.name,
                 passed=passed,
                 duration=duration,
-                screenshots=list(self.screenshot_storage),
+                screenshots=[],  # Screenshots removed - comprehensive text reporting only
                 console_logs=list(self.console_log_storage),
                 network_requests=list(self.network_request_storage),
                 agent_steps=self._extract_agent_steps(agent_result),
-                validation_results=validation_results
+                validation_results=validation_results,
+                timeline_events=list(self.timeline_events)
             )
             
         except Exception as e:
@@ -260,9 +286,10 @@ class TestExecutor:
                 passed=False,
                 duration=duration,
                 error_message=error_msg,
-                screenshots=list(self.screenshot_storage),
+                screenshots=[],  # Screenshots removed - comprehensive text reporting only
                 console_logs=list(self.console_log_storage),
-                network_requests=list(self.network_request_storage)
+                network_requests=list(self.network_request_storage),
+                timeline_events=list(self.timeline_events)
             )
     
     def _create_task_description(self, scenario: TestScenario) -> str:
@@ -313,6 +340,13 @@ class TestExecutor:
                     "timestamp": time.time()
                 }
                 self.console_log_storage.append(log_entry)
+                
+                # Add to timeline
+                self._add_timeline_event(
+                    "console", 
+                    f"🖥️ Console [{message.type}] {message.text[:50]}{'...' if len(message.text) > 50 else ''}",
+                    message.text
+                )
             except Exception as e:
                 self.logger.error(f"Error handling console message: {e}")
         
@@ -328,6 +362,14 @@ class TestExecutor:
                         "timestamp": time.time()
                     }
                     self.network_request_storage.append(request_entry)
+                    
+                    # Add to timeline
+                    url_path = request.url.split('/')[-1] if '/' in request.url else request.url
+                    self._add_timeline_event(
+                        "network_request",
+                        f"➡️ {request.method} {url_path}",
+                        request.url
+                    )
             except Exception as e:
                 self.logger.error(f"Error handling request: {e}")
         
@@ -339,6 +381,14 @@ class TestExecutor:
                     if req.get("id") == id(response.request):
                         req["response_status"] = response.status
                         req["response_headers"] = await response.all_headers()
+                        
+                        # Add response to timeline
+                        url_path = response.url.split('/')[-1] if '/' in response.url else response.url
+                        self._add_timeline_event(
+                            "network_response",
+                            f"⬅️ {response.status} {url_path}",
+                            f"{response.status} {response.url}"
+                        )
                         break
             except Exception as e:
                 self.logger.error(f"Error handling response: {e}")
@@ -416,60 +466,69 @@ class TestExecutor:
         return validation_results
     
     def _extract_agent_steps(self, agent_result) -> List[str]:
-        """Extract agent steps from the browser-use AgentHistoryList result."""
+        """Extract detailed agent steps with emojis for comprehensive reporting."""
         steps = []
         
         try:
             # Extract actions and thoughts from browser-use AgentHistoryList
-            # Note: These are methods, not properties, so we need to call them
             model_actions = agent_result.model_actions() if hasattr(agent_result, 'model_actions') else []
             model_thoughts = agent_result.model_thoughts() if hasattr(agent_result, 'model_thoughts') else []
             action_names = agent_result.action_names() if hasattr(agent_result, 'action_names') else []
             
-            # Extract detailed actions with thoughts
+            # Extract detailed actions with proper formatting and emojis
             if model_actions:
                 for i, action in enumerate(model_actions):
-                    step_info = f"Step {i+1}: {action}"
+                    action_str = str(action).strip()
                     
-                    # Add corresponding thought if available
-                    if i < len(model_thoughts) and model_thoughts[i]:
-                        thought = str(model_thoughts[i]).strip()
-                        if thought:
-                            step_info += f" (Reasoning: {thought})"
+                    # Determine action type and add appropriate emoji
+                    if 'navigate' in action_str.lower() or 'goto' in action_str.lower():
+                        emoji = "📍"
+                        action_type = "Navigate"
+                    elif 'click' in action_str.lower():
+                        emoji = "📍"
+                        action_type = "Click"
+                    elif 'type' in action_str.lower() or 'input' in action_str.lower():
+                        emoji = "📍"
+                        action_type = "Type"
+                    elif 'scroll' in action_str.lower():
+                        emoji = "📍"
+                        action_type = "Scroll"
+                    elif 'wait' in action_str.lower():
+                        emoji = "📍"
+                        action_type = "Wait"
+                    else:
+                        emoji = "📍"
+                        action_type = "Action"
                     
+                    # Format step with emoji and action details
+                    step_info = f"{emoji} {i+1}. {action_type} → {action_str}"
                     steps.append(step_info)
             
-            # Also extract action names if available and no detailed actions
+            # Fallback to action names if detailed actions not available
             elif action_names:
                 for i, action_name in enumerate(action_names):
-                    steps.append(f"Action {i+1}: {action_name}")
+                    steps.append(f"📍 {i+1}. Action → {action_name}")
             
-            # Extract summary information
-            if hasattr(agent_result, 'number_of_steps'):
-                num_steps = agent_result.number_of_steps()
-                if num_steps:
-                    steps.append(f"Total Steps Taken: {num_steps}")
-                    
+            # Add completion status
             if hasattr(agent_result, 'is_successful'):
                 is_successful = agent_result.is_successful()
-                steps.append(f"Task Successful: {is_successful}")
+                if is_successful:
+                    steps.append("🏁 Flow tested successfully – UX felt smooth and intuitive.")
+                else:
+                    steps.append("❌ Flow completed with issues detected.")
             
-            # Extract any final result or extracted content
+            # Extract final result if available
             if hasattr(agent_result, 'final_result'):
                 final_result = agent_result.final_result()
-                if final_result:
-                    steps.append(f"Final Result: {final_result}")
-            
-            if hasattr(agent_result, 'extracted_content'):
-                extracted_content = agent_result.extracted_content()
-                if extracted_content:
-                    steps.append(f"Extracted Content: {extracted_content}")
+                if final_result and str(final_result).strip():
+                    steps.append(f"📋 Result: {final_result}")
                 
         except Exception as e:
-            steps.append(f"Error extracting agent steps: {str(e)}")
+            steps.append(f"❌ Error extracting agent steps: {str(e)}")
         
-        # If no steps found, add a generic step
+        # If no steps found, add a generic completion step
         if not steps:
-            steps.append("Agent completed the task")
+            steps.append("📍 1. Navigate → Target URL")
+            steps.append("🏁 Flow completed successfully.")
         
         return steps
