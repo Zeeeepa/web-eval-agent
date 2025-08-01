@@ -6,9 +6,6 @@ import argparse
 import traceback
 import uuid
 from enum import Enum
-from webEvalAgent.src.utils import stop_log_server
-from webEvalAgent.src.log_server import send_log
-
 # Set the Google API key for Gemini
 if 'GEMINI_API_KEY' in os.environ:
     os.environ["GOOGLE_API_KEY"] = os.environ['GEMINI_API_KEY']
@@ -19,11 +16,11 @@ from mcp.server.fastmcp import FastMCP, Context
 from mcp.types import TextContent
 
 # Import our enhanced modules
-from webEvalAgent.src.api_utils import validate_api_key
-from webEvalAgent.src.tool_handlers import handle_web_evaluation, handle_setup_browser_state
-from webEvalAgent.src.logging_config import get_logger, create_session_context
-from webEvalAgent.src.session_manager import get_session_manager, SessionConfig
-from webEvalAgent.src.github_integration import GitHubIntegration, test_github_pr, test_github_branch
+from ..utils.api_utils import validate_api_key
+from ..utils.log_server import send_log, stop_log_server
+from .tool_handlers import handle_web_evaluation, handle_setup_browser_state
+from ..utils.logging_config import get_logger, create_session_context
+from ..utils.github_integration import GitHubIntegration, test_github_pr, test_github_branch
 
 # Initialize structured logging
 logger = get_logger("mcp-server")

@@ -14,9 +14,9 @@ from typing import Optional
 
 from .instruction_parser import InstructionParser
 from .test_executor import TestExecutor
-from .reporter import Reporter
 from .config import Config
-from .utils import setup_logging, validate_url, check_dependencies
+from ..utils.utils import setup_logging, validate_url, check_dependencies
+from ..reporting.reporter import Reporter
 
 
 def create_parser() -> argparse.ArgumentParser:
