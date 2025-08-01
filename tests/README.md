@@ -1,243 +1,206 @@
-# Web-Eval-Agent Tests
+# 🧪 Web-Eval Agent Test Suite
 
-This directory contains comprehensive tests for the web-eval-agent, including tests for local web applications with interactive features.
+This directory contains comprehensive tests for the web-eval agent, including an example Flask application and automated test runners.
 
-## Test Files
+## 📁 Contents
 
-### Core Tests
-- **`simple_test.py`** - Basic functionality and API validation test
-- **`test_ssh_demo.py`** - Demonstrates SSH search functionality with AI analysis
-- **`test_local_webapp.py`** - Comprehensive local web application testing
+### Example Application
+- **`example-app/`** - Complete Flask web application for testing
+  - **`app.py`** - Main Flask application with multiple features
+  - **`templates/`** - HTML templates for all pages
+  - **`static/`** - CSS and JavaScript assets
+  - **`requirements.txt`** - Python dependencies
 
-### Additional Tests
-- **`test_ssh_search.py`** - Direct SSH search on Google (may encounter bot detection)
-- **`test_minimal_ssh.py`** - Minimal SSH search test with DuckDuckGo
-- **`test_improved_ssh.py`** - Enhanced search with better result extraction
-- **`test_direct_mcp.py`** - Direct MCP server testing
-- **`test_simple_website.py`** - Simple website evaluation test
+### Test Instructions
+- **`comprehensive-web-eval-test.md`** - Comprehensive test scenarios covering:
+  - Homepage navigation and overview
+  - Interactive counter functionality
+  - Contact form validation and submission
+  - Todo list AJAX operations
+  - User registration and authentication flow
+  - Interactive elements and API integration
+  - Cross-page navigation and state persistence
+  - Performance and error monitoring
 
-### Test Runner
-- **`run_tests.py`** - Unified test runner with command-line options
+### Test Runners
+- **`run_comprehensive_test.py`** - Python script that:
+  - Starts the Flask application on port 5000
+  - Waits for server readiness
+  - Runs web-eval with comprehensive instructions
+  - Captures and displays results
+  - Cleans up processes
+- **`run_test.sh`** - Shell script wrapper for easy execution
 
-## Quick Start
+## 🚀 Quick Start
 
-### 1. Set up your API key
+### Prerequisites
+1. Set your Gemini API key:
+   ```bash
+   export GEMINI_API_KEY="your_api_key_here"
+   ```
+
+2. Install dependencies:
+   ```bash
+   pip install flask requests
+   ```
+
+### Run Comprehensive Test
+
+From the project root directory:
+
 ```bash
-export GEMINI_API_KEY="your_gemini_api_key_here"
+# Using the shell script
+./tests/run_test.sh
+
+# Or directly with Python
+python tests/run_comprehensive_test.py
 ```
 
-### 2. Run basic tests
-```bash
-# Run basic functionality test
-python tests/run_tests.py --test basic
+## 🎯 What the Test Does
 
-# Run SSH search demonstration
-python tests/run_tests.py --test ssh
+1. **Starts Flask App** - Launches the example web application on `http://localhost:5000`
+2. **Runs 8 Test Scenarios** - Executes comprehensive test instructions covering:
+   - Basic navigation and page loading
+   - Interactive form elements and validation
+   - AJAX operations and API calls
+   - User authentication and session management
+   - Cross-page state persistence
+   - Performance and error monitoring
+3. **Generates Report** - Creates a comprehensive text report with:
+   - 📊 Test results summary
+   - 🔍 Agent steps with emojis
+   - 🖥️ Console logs
+   - 🌐 Network requests
+   - ⏱️ Chronological timeline
+4. **Cleanup** - Properly stops the Flask application
 
-# Run local webapp test
-python tests/run_tests.py --test local
+## 📊 Example Output
 
-# Run all tests
-python tests/run_tests.py --test all
+```
+🧪 Web-Eval Agent Comprehensive Test Runner
+==================================================
+🚀 Starting Comprehensive Web-Eval Test
+============================================================
+🌟 Starting Flask application...
+⏳ Waiting for server at http://localhost:5000 to be ready...
+✅ Server is ready at http://localhost:5000
+🧪 Running web-eval with comprehensive test instructions...
+
+📊 Web-Eval Results:
+========================================
+🧪 Running test 1/8: Homepage Navigation and Overview Test
+   ✅ PASSED (3.8s)
+🧪 Running test 2/8: Interactive Counter Functionality Test
+   ✅ PASSED (3.5s)
+...
+
+📊 Test Results Summary:
+   ✅ Passed: 8
+   ❌ Failed: 0
+   📄 Report: comprehensive-test-report.txt
 ```
 
-## Local Web Application Testing
+## 📋 Generated Report Format
 
-### Testing Your Local Development Server
+The test generates a comprehensive text report with the exact format specified:
 
-The web-eval-agent can test locally hosted applications on any port. Here are common scenarios:
+```
+📊 Web Evaluation Report for http://localhost:5000 complete!
+📝 Task: Homepage Navigation and Overview Test
 
-#### React Development Server (port 3000)
-```bash
-# Start your React app
-npm start  # Usually runs on http://localhost:3000
+🔍 Agent Steps
+  📍 1. Navigate → http://localhost:5000
+  📍 2. Click "Counter" (navigation link)
+  🏁 Flow completed successfully.
 
-# Test with web-eval-agent
-python tests/test_local_webapp.py
+🖥️ Console Logs (5)
+  1. [log] Web Eval Test App loaded successfully!
+  2. [log] Current page: /
+  ...
+
+🌐 Network Requests (3)
+  1. GET /static/style.css                   200
+  2. POST /api/todos                         201
+  ...
+
+⏱️ Chronological Timeline
+  02:23:09.189 🖥️ Console [log] Web Eval Test App loaded successfully!
+  02:23:09.312 ➡️ GET /static/style.css
+  02:23:09.318 ⬅️ 200 /static/style.css
+  ...
+👁️  See the "Operative Control Center" dashboard for live logs.
 ```
 
-#### Next.js Application (port 3000)
-```bash
-# Start your Next.js app
-npm run dev  # Usually runs on http://localhost:3000
+## 🎯 Flask Application Features
 
-# Test with web-eval-agent
-python tests/test_local_webapp.py
+The example Flask application includes:
+
+- **Homepage** - Navigation overview with feature cards
+- **Counter** - Interactive increment/decrement/reset functionality
+- **Forms** - Contact form with validation and error handling
+- **Todo List** - AJAX-powered todo management with API endpoints
+- **Authentication** - User registration, login, logout, and dashboard
+- **Interactive Elements** - Random quotes, slow/error API endpoints
+- **Modal Dialogs** - Testing modal interactions
+- **API Endpoints** - RESTful APIs for todos, quotes, and testing
+
+## 🔧 Customization
+
+### Adding New Test Scenarios
+
+Edit `comprehensive-web-eval-test.md` to add new test scenarios:
+
+```markdown
+## Your New Test
+
+**Description:**
+Describe what this test does.
+
+**Steps:**
+1. Navigate to the target page
+2. Perform specific actions
+3. Verify expected outcomes
+
+**Validations:**
+- List validation criteria
+- Expected behaviors
+- Error conditions to check
+
+**Expected Outcomes:**
+- What should happen
+- Success criteria
+
+**Priority:** high/medium/low
+**Tags:** #your-tags
 ```
 
-#### Express.js Server (port 8000)
-```bash
-# Start your Express server
-node server.js  # Or your server file
+### Modifying the Flask App
 
-# Modify test_local_webapp.py to use http://localhost:8000
-python tests/test_local_webapp.py
-```
+The Flask application in `example-app/` can be extended with:
+- New routes and pages
+- Additional API endpoints
+- More interactive features
+- Database integration
+- Authentication enhancements
 
-#### Custom Port Applications
-```bash
-# For applications running on custom ports (e.g., 8080, 5000, 4000)
-python tests/run_tests.py --test local --url http://localhost:8080
-```
+### Customizing Test Runner
 
-### What the Agent Can Test
+Modify `run_comprehensive_test.py` to:
+- Change port numbers
+- Adjust timeouts
+- Add pre/post test hooks
+- Customize report formatting
+- Add additional validation
 
-The web-eval-agent can interact with and test:
+## 🎉 Success Criteria
 
-#### 🎯 **Interactive Elements**
-- **Forms**: Fill out contact forms, registration forms, search forms
-- **Buttons**: Click submit buttons, navigation buttons, action buttons
-- **Links**: Navigate through internal and external links
-- **Dropdowns**: Select options from dropdown menus
-- **Checkboxes & Radio Buttons**: Toggle and select form controls
-- **Modals & Popups**: Open and interact with modal dialogs
-- **Tabs**: Switch between tab panels and content sections
+A successful test run should show:
+- ✅ All 8 test scenarios passing
+- 📊 Comprehensive text report generated
+- 🖥️ Console logs captured
+- 🌐 Network requests tracked
+- ⏱️ Chronological timeline with precise timestamps
+- 🧹 Clean process cleanup
 
-#### 🔄 **User Workflows**
-- **Authentication**: Test login/logout flows (with test credentials)
-- **E-commerce**: Browse products, add to cart, checkout process
-- **Search**: Use search functionality and evaluate results
-- **Navigation**: Test menu navigation and page routing
-- **Form Submission**: Complete multi-step forms and wizards
-- **File Uploads**: Test file upload functionality (with test files)
-
-#### 📱 **Responsive Design**
-- **Mobile Testing**: Resize browser to test mobile layouts
-- **Tablet Testing**: Test tablet-sized viewports
-- **Desktop Testing**: Verify desktop layout and functionality
-
-#### ⚡ **Performance & UX**
-- **Loading Times**: Measure page load performance
-- **Error Handling**: Test error scenarios and validation
-- **Accessibility**: Basic accessibility evaluation
-- **User Experience**: Overall usability assessment
-
-### Example Test Scenarios
-
-#### Testing a Contact Form
-```python
-task = """
-Test the contact form:
-1. Fill out all required fields with test data
-2. Submit the form and verify success message
-3. Test form validation with invalid inputs
-4. Check error message clarity and helpfulness
-"""
-```
-
-#### Testing E-commerce Functionality
-```python
-task = """
-Test the shopping experience:
-1. Browse product categories
-2. Search for specific products
-3. Add items to cart and modify quantities
-4. Proceed through checkout process
-5. Test payment form validation (don't submit real payment)
-"""
-```
-
-#### Testing User Authentication
-```python
-task = """
-Test user authentication:
-1. Try to access protected pages without login
-2. Test login form with valid test credentials
-3. Verify successful login redirects correctly
-4. Test logout functionality
-5. Check password reset flow if available
-"""
-```
-
-### Customizing Tests for Your Application
-
-#### 1. Modify the URL
-Edit `tests/test_local_webapp.py` and change:
-```python
-"url": "http://localhost:3000",  # Change to your app's URL
-```
-
-#### 2. Customize the Test Task
-Modify the task description to focus on your app's specific features:
-```python
-"task": """
-Test my specific application features:
-1. Test the user dashboard functionality
-2. Verify data visualization components
-3. Test the settings page and preferences
-4. Check the notification system
-5. Validate the search and filter features
-"""
-```
-
-#### 3. Create Feature-Specific Tests
-Create new test functions for specific features:
-```python
-async def test_my_specific_feature():
-    test_params = {
-        "url": "http://localhost:3000/my-feature",
-        "task": "Test this specific feature thoroughly...",
-        "headless": False,
-        "tool_call_id": "my-feature-test"
-    }
-    # Run test...
-```
-
-### Tips for Effective Testing
-
-#### 🎯 **Be Specific in Your Test Tasks**
-- Clearly describe what features to test
-- Provide test data to use (names, emails, etc.)
-- Specify expected behaviors and outcomes
-
-#### 🔍 **Test Edge Cases**
-- Invalid form inputs
-- Network error scenarios
-- Browser back/forward navigation
-- Page refresh during processes
-
-#### 📊 **Request Detailed Reports**
-- Ask for specific feedback on usability
-- Request performance observations
-- Get recommendations for improvements
-- Ask for bug reproduction steps
-
-#### 🚀 **Iterative Testing**
-- Start with basic functionality tests
-- Gradually add more complex scenarios
-- Test after each development iteration
-- Use feedback to improve your application
-
-### Troubleshooting
-
-#### Common Issues
-1. **"Connection refused"** - Make sure your local server is running
-2. **"API key not found"** - Set the GEMINI_API_KEY environment variable
-3. **"Test hangs"** - Some sites have bot detection; try headless mode
-4. **"No results found"** - Check if your app's elements have proper selectors
-
-#### Debug Mode
-Run tests with visible browser to see what's happening:
-```python
-"headless": False,  # Set this in your test parameters
-```
-
-#### Verbose Logging
-Check the "Operative Control Center" dashboard for detailed logs and screenshots during test execution.
-
-## Contributing
-
-To add new tests:
-1. Create a new test file in the `tests/` directory
-2. Follow the existing test patterns
-3. Add your test to the `run_tests.py` script
-4. Update this README with documentation
-
-## Support
-
-For issues or questions about testing:
-1. Check the main README.md for setup instructions
-2. Verify your GEMINI_API_KEY is correctly set
-3. Ensure your local application is running and accessible
-4. Review the test logs for specific error messages
+This test suite validates that the web-eval agent can successfully analyze and interact with a real web application while generating the comprehensive text reports with emojis exactly as specified!
 
