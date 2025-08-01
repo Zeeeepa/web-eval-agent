@@ -14,4 +14,3 @@ from .core.test_executor import TestExecutor
 from .reporting.reporter import Reporter
 
 __all__ = ["main", "TestExecutor", "Reporter"]
-

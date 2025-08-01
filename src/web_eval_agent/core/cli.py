@@ -113,10 +113,32 @@ Examples:
         help="Enable debug mode with detailed logging"
     )
     
+    # Multi-agent options
+    parser.add_argument(
+        "--agents",
+        type=int,
+        default=3,
+        help="Number of agents to run in parallel (default: 3)"
+    )
+    
+    parser.add_argument(
+        "--no-scout",
+        action="store_false",
+        dest="scout_mode",
+        help="Disable scout mode (automatic element discovery)"
+    )
+    
+    parser.add_argument(
+        "--no-parallel",
+        action="store_false", 
+        dest="parallel_execution",
+        help="Disable parallel execution of agents"
+    )
+    
     parser.add_argument(
         "--version",
         action="version",
-        version="%(prog)s 2.0.0"
+        version="%(prog)s 2.0.0 (Multi-Agent Edition)"
     )
     
     return parser
@@ -163,11 +185,18 @@ async def run_tests(args) -> int:
             viewport=args.viewport,
             api_key=args.api_key or os.getenv("GEMINI_API_KEY"),
             verbose=args.verbose,
-            debug=args.debug
+            debug=args.debug,
+            # Multi-agent settings
+            num_agents=args.agents,
+            scout_mode=getattr(args, 'scout_mode', True),
+            parallel_execution=getattr(args, 'parallel_execution', True)
         )
         
-        print(f"🚀 Starting web evaluation for {args.url}")
+        print(f"🚀 Starting multi-agent web evaluation for {args.url}")
         print(f"📋 Using instructions from {args.instructions}")
+        print(f"🤖 Deploying {config.num_agents} agents in {'headless' if config.headless else 'GUI'} mode")
+        print(f"🔍 Scout mode: {'Enabled' if config.scout_mode else 'Disabled'}")
+        print(f"⚡ Parallel execution: {'Enabled' if config.parallel_execution else 'Disabled'}")
         
         # Parse instructions
         parser = InstructionParser()

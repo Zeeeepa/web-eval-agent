@@ -1,19 +1,22 @@
-# 🚀 Web Eval Agent - AI-Powered Web Application Testing
+# 🚀 Web Eval Agent - Multi-Agent AI Web Testing
 
-> *Autonomous web application testing powered by AI - Let the agent test your apps while you focus on building.*
+> *Revolutionary multi-agent AI testing framework - Deploy multiple intelligent agents to comprehensively test your web applications.*
 
 ![Demo](demo.gif)
 
 ## 🔥 What is Web Eval Agent?
 
-Web Eval Agent is an AI-powered testing framework that autonomously navigates, tests, and evaluates web applications. It uses advanced browser automation with AI to provide comprehensive testing reports, including UX evaluation, performance analysis, and bug detection.
+Web Eval Agent is a cutting-edge multi-agent AI testing framework that deploys multiple intelligent agents to simultaneously test different aspects of your web applications. Using advanced browser automation with AI-powered analysis, it provides comprehensive testing reports with severity classification and detailed issue analysis.
 
 ## ⚡ Key Features
 
-- 🤖 **AI-Powered Testing** - Intelligent test execution using Google Gemini
-- 🌐 **Full Browser Automation** - Real browser testing with Playwright
-- 📊 **Comprehensive Reports** - Detailed HTML and structured text reports
-- 🚨 **Error Detection** - Captures console errors, network failures, and UX issues
+- 🤖 **Multi-Agent Testing** - Deploy 3+ agents simultaneously for comprehensive coverage
+- 🔍 **Scout Mode** - Intelligent element discovery and targeted test generation
+- ⚡ **Parallel Execution** - Agents work in parallel for faster testing
+- 🧠 **AI-Powered Analysis** - Severity classification and detailed issue analysis
+- 🌐 **Full Browser Automation** - Real browser testing with browser-use framework
+- 📊 **Comprehensive Reports** - Detailed text reports with severity breakdown
+- 🚨 **Smart Error Detection** - AI-powered issue classification and analysis
 - 📱 **Responsive Testing** - Multi-viewport and device testing
 - 🔄 **CI/CD Integration** - Easy integration with development workflows
 - 📈 **Performance Monitoring** - Page load times and interaction metrics
@@ -58,19 +61,25 @@ VIEWPORT_WIDTH=1920
 VIEWPORT_HEIGHT=1080
 ```
 
-### 3. Run Tests
+### 3. Run Multi-Agent Tests
 
 ```bash
-# Run the comprehensive test suite
-python tests
+# Run with default 3 agents
+web-eval --url http://localhost:3000 --instructions test-scenarios/basic/test_instructions.md
+
+# Deploy 5 agents for comprehensive testing
+web-eval --url http://localhost:3000 --instructions test-scenarios/advanced/multi-agent-comprehensive.md --agents 5
+
+# Run with GUI mode to see agents in action
+web-eval --url http://localhost:3000 --instructions test-scenarios/basic/test_instructions.md --no-headless
 ```
 
 This command will:
-1. **Start a local test server** on `http://localhost:3000`
-2. **Launch Web Eval Agent** with `--url http://localhost:3000 --instructions examples/test_instructions/INSTRUCTIONS.md`
-3. **Execute comprehensive tests** including navigation, forms, and interactive elements
-4. **Generate detailed reports** in both HTML and structured text formats
-5. **Display results** with links to generated reports
+1. **Deploy multiple AI agents** simultaneously (default: 3 agents)
+2. **Scout the page** for interactive elements (if scout mode enabled)
+3. **Execute parallel testing** with agents focusing on different aspects
+4. **Analyze findings** using AI for severity classification
+5. **Generate comprehensive reports** with detailed issue breakdown
 
 ## 📊 What Gets Tested
 
@@ -95,26 +104,40 @@ This command will:
 
 ## 🛠️ Usage Examples
 
-### Basic Web Application Testing
+### Basic Multi-Agent Testing
 
 ```bash
-# Test a local development server
-python -m web_eval_agent --url http://localhost:3000 --instructions examples/test_instructions/simple-test.md
+# Test with default 3 agents
+web-eval --url http://localhost:3000 --instructions test-scenarios/basic/test_instructions.md
 
-# Test with custom viewport
-python -m web_eval_agent --url http://localhost:8080 --viewport 1280x720 --browser firefox
+# Test with custom viewport and browser
+web-eval --url http://localhost:8080 --instructions test-scenarios/basic/test_instructions.md --viewport 1280x720 --browser firefox
 
-# Generate structured report
-python -m web_eval_agent --url https://example.com --report-format text --report-detail structured
+# Generate detailed text report
+web-eval --url https://example.com --instructions test-scenarios/basic/test_instructions.md --format text
 ```
 
-### Advanced Testing Scenarios
+### Advanced Multi-Agent Scenarios
 
 ```bash
-# Test specific user workflows
-python -m web_eval_agent \
+# Deploy 5 agents for comprehensive testing
+web-eval \
   --url http://localhost:3000 \
-  --instructions examples/test_instructions/comprehensive-test.md \
+  --instructions test-scenarios/advanced/multi-agent-comprehensive.md \
+  --agents 5
+
+# E-commerce flow testing with multiple agents
+web-eval \
+  --url http://localhost:3000 \
+  --instructions test-scenarios/advanced/e-commerce-flow.md \
+  --agents 4 \
+  --no-headless
+
+# Disable scout mode and use instruction-based testing only
+web-eval \
+  --url http://localhost:3000 \
+  --instructions test-scenarios/basic/test_instructions.md \
+  --no-scout \
   --headless false \
   --output-file reports/comprehensive-test.html
 
@@ -395,4 +418,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 **Built with ❤️ for developers who want reliable, automated web testing.**
-
