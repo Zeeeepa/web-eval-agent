@@ -17,15 +17,20 @@ class Config:
     api_key: str
     
     # Output settings
-    output_file: str = "web-eval-report.html"
-    report_format: str = "html"
+    output_file: str = "web-eval-report.txt"
+    report_format: str = "text"
     report_detail_level: str = "detailed"  # Options: "summary", "detailed", "verbose"
     
     # Browser settings
     browser: str = "chromium"
-    headless: bool = False
+    headless: bool = True
     viewport: str = "1280x720"
     timeout: int = 300
+    
+    # Multi-agent settings (new defaults)
+    num_agents: int = 3
+    scout_mode: bool = True
+    parallel_execution: bool = True
     
     # Logging settings
     verbose: bool = False

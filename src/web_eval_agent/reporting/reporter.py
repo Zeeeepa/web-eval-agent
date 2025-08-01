@@ -474,26 +474,95 @@ class Reporter:
         }
     
     def _create_comprehensive_text_report(self, results: TestResults) -> str:
-        """Create comprehensive text report with emojis and structured sections."""
+        """Create comprehensive text report with multi-agent analysis and severity classification."""
         lines = []
         
         # Report Header
         lines.extend([
             "=" * 100,
-            "🧪 WEB EVALUATION AGENT - COMPREHENSIVE TEST REPORT",
+            "🧪 WEB EVALUATION AGENT - MULTI-AGENT TEST REPORT",
             "=" * 100,
             f"📅 Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
             f"🌐 Target URL: {self.config.url}",
             f"⏱️  Total Duration: {format_duration(results.total_duration)}",
+            f"🤖 Agents Used: {results.summary.get('agents_used', self.config.num_agents)}",
             f"🔧 Configuration: {self.config.browser} | {self.config.viewport} | {'Headless' if self.config.headless else 'GUI'}",
             ""
         ])
         
+        # AI Analysis Summary
+        analysis = results.summary.get('analysis', {})
+        if analysis:
+            status_emoji = analysis.get('status_emoji', '❓')
+            status_description = analysis.get('status_description', 'Analysis unavailable')
+            total_issues = analysis.get('total_issues', 0)
+            
+            lines.extend([
+                "🤖 AI ANALYSIS SUMMARY",
+                "-" * 40,
+                f"{status_emoji} Overall Status: {status_description}",
+                f"🔍 Total Issues Found: {total_issues}",
+                ""
+            ])
+            
+            # Severity Breakdown
+            severity_breakdown = analysis.get('severity_breakdown', {})
+            if severity_breakdown:
+                high_severity = len(severity_breakdown.get('high_severity', []))
+                medium_severity = len(severity_breakdown.get('medium_severity', []))
+                low_severity = len(severity_breakdown.get('low_severity', []))
+                
+                lines.extend([
+                    "📊 SEVERITY BREAKDOWN",
+                    "-" * 40,
+                    f"🔴 High Severity: {high_severity} issues",
+                    f"🟠 Medium Severity: {medium_severity} issues", 
+                    f"🟡 Low Severity: {low_severity} issues",
+                    ""
+                ])
+                
+                # Detailed Issues
+                if high_severity > 0:
+                    lines.extend([
+                        "🔴 HIGH SEVERITY ISSUES",
+                        "-" * 40
+                    ])
+                    for i, issue in enumerate(severity_breakdown.get('high_severity', []), 1):
+                        lines.extend([
+                            f"{i}. {issue.get('category', 'General').upper()}",
+                            f"   {issue.get('description', 'No description available')}",
+                            ""
+                        ])
+                
+                if medium_severity > 0:
+                    lines.extend([
+                        "🟠 MEDIUM SEVERITY ISSUES", 
+                        "-" * 40
+                    ])
+                    for i, issue in enumerate(severity_breakdown.get('medium_severity', []), 1):
+                        lines.extend([
+                            f"{i}. {issue.get('category', 'General').upper()}",
+                            f"   {issue.get('description', 'No description available')}",
+                            ""
+                        ])
+                
+                if low_severity > 0:
+                    lines.extend([
+                        "🟡 LOW SEVERITY ISSUES",
+                        "-" * 40
+                    ])
+                    for i, issue in enumerate(severity_breakdown.get('low_severity', []), 1):
+                        lines.extend([
+                            f"{i}. {issue.get('category', 'General').upper()}",
+                            f"   {issue.get('description', 'No description available')}",
+                            ""
+                        ])
+        
         # Executive Summary
         summary = results.summary
         total_tests = summary.get('total_tests', 0)
-        passed_tests = summary.get('passed_tests', 0)
-        failed_tests = summary.get('failed_tests', 0)
+        passed_tests = summary.get('passed', 0)
+        failed_tests = summary.get('failed', 0)
         success_rate = summary.get('success_rate', 0)
         
         lines.extend([
@@ -502,9 +571,9 @@ class Reporter:
             f"✅ Tests Passed: {passed_tests}/{total_tests}",
             f"❌ Tests Failed: {failed_tests}/{total_tests}",
             f"📈 Success Rate: {success_rate:.1f}%",
-            f"🔧 Browser: {self.config.browser}",
-            f"📱 Viewport: {self.config.viewport}",
-            f"⚡ Headless Mode: {'Yes' if self.config.headless else 'No'}",
+            f"🤖 Multi-Agent Mode: {self.config.num_agents} agents",
+            f"🔍 Scout Mode: {'Enabled' if self.config.scout_mode else 'Disabled'}",
+            f"⚡ Parallel Execution: {'Enabled' if self.config.parallel_execution else 'Disabled'}",
             ""
         ])
         
