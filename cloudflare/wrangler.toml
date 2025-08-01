@@ -1,0 +1,46 @@
+# Cloudflare Worker Configuration for Webhook Gateway
+name = "webhook-gateway"
+main = "webhook-gateway.js"
+compatibility_date = "2024-01-15"
+compatibility_flags = ["nodejs_compat"]
+
+# Environment variables (set these in Cloudflare dashboard or via wrangler secret)
+[env.production]
+name = "webhook-gateway"
+vars = { ENVIRONMENT = "production" }
+
+[env.staging]
+name = "webhook-gateway-staging"
+vars = { ENVIRONMENT = "staging" }
+
+# KV Namespaces for storing webhook events
+[[kv_namespaces]]
+binding = "WEBHOOK_EVENTS"
+id = "your-kv-namespace-id"
+preview_id = "your-preview-kv-namespace-id"
+
+# Durable Objects for rate limiting
+[[durable_objects.bindings]]
+name = "RATE_LIMITER"
+class_name = "RateLimiter"
+
+# Worker limits and configuration
+[limits]
+cpu_ms = 50
+
+# Routes (configure these in Cloudflare dashboard)
+# routes = [
+#   { pattern = "webhook-gateway.pixeliumperfecto.workers.dev/*", zone_name = "pixeliumperfecto.workers.dev" }
+# ]
+
+# Build configuration
+[build]
+command = ""
+
+# Secrets to set via: wrangler secret put <SECRET_NAME>
+# GITHUB_WEBHOOK_SECRET - GitHub webhook secret for signature verification
+# CLOUDFLARE_API_KEY - Cloudflare API key (if needed for additional operations)
+
+# Usage:
+# wrangler deploy --env production
+# wrangler secret put GITHUB_WEBHOOK_SECRET --env production
