@@ -1,27 +1,22 @@
 ====================================================================================================
 🧪 WEB EVALUATION AGENT - MULTI-AGENT TEST REPORT
 ====================================================================================================
-📅 Generated: 2025-08-01 13:40:43
+📅 Generated: 2025-08-01 13:42:06
 🌐 Target URL: http://localhost:5000
-⏱️  Total Duration: 6.3s
+⏱️  Total Duration: 3.3s
 🤖 Agents Used: 1
 🔧 Configuration: chromium | 1280x720 | Headless
 
 🤖 AI ANALYSIS SUMMARY
 ----------------------------------------
-🔴 Overall Status: Critical issues found that need immediate attention
-🔍 Total Issues Found: 1
+✅ Overall Status: No issues detected during testing
+🔍 Total Issues Found: 0
 
 📊 SEVERITY BREAKDOWN
 ----------------------------------------
-🔴 High Severity: 1 issues
+🔴 High Severity: 0 issues
 🟠 Medium Severity: 0 issues
 🟡 Low Severity: 0 issues
-
-🔴 HIGH SEVERITY ISSUES
-----------------------------------------
-1. ACCESSIBILITY
-   The page failed to load at http://localhost:5000/. This prevents users from accessing any content or functionality.
 
 📊 EXECUTIVE SUMMARY
 ----------------------------------------
@@ -34,14 +29,14 @@
 
 📋 TEST RESULTS OVERVIEW
 ----------------------------------------
- 1. ❌ Test Objective (1.6s)
-     💥 Error: Issues found during testing
- 2. ❌ Test Scenarios (1.6s)
-     💥 Error: Issues found during testing
- 3. ❌ Success Criteria (1.6s)
-     💥 Error: Issues found during testing
- 4. ❌ Notes (1.6s)
-     💥 Error: Issues found during testing
+ 1. ❌ Test Objective (836ms)
+     💥 Error: Agent execution failed: Agent 0: Agent 0 failed to produce results - likely due to API issues
+ 2. ❌ Test Scenarios (836ms)
+     💥 Error: Agent execution failed: Agent 0: Agent 0 failed to produce results - likely due to API issues
+ 3. ❌ Success Criteria (836ms)
+     💥 Error: Agent execution failed: Agent 0: Agent 0 failed to produce results - likely due to API issues
+ 4. ❌ Notes (836ms)
+     💥 Error: Agent execution failed: Agent 0: Agent 0 failed to produce results - likely due to API issues
 
 🔍 DETAILED TEST RESULTS
 ================================================================================
@@ -49,17 +44,18 @@
 TEST 1/4: Test Objective
 ------------------------------------------------------------
 Status: ❌ FAILED
-Duration: 1.6s
+Duration: 836ms
 URL: http://localhost:5000
 
 💥 ERROR DETAILS:
-   Issues found during testing
+   Agent execution failed: Agent 0: Agent 0 failed to produce results - likely due to API issues
 
 ✅ VALIDATION RESULTS:
    ❌ Unknown validation
 
 🤖 AGENT EXECUTION STEPS:
-    1. The page failed to load. The specific error is that the page at http://localhost:5000/ is unavailable.
+   📍 1. Navigate → Target URL
+   🏁 Flow completed successfully.
 
 🖥️  CONSOLE LOGS (0 total):
    No console logs captured
@@ -76,11 +72,11 @@ URL: http://localhost:5000
 TEST 2/4: Test Scenarios
 ------------------------------------------------------------
 Status: ❌ FAILED
-Duration: 1.6s
+Duration: 836ms
 URL: http://localhost:5000
 
 💥 ERROR DETAILS:
-   Issues found during testing
+   Agent execution failed: Agent 0: Agent 0 failed to produce results - likely due to API issues
 
 ✅ VALIDATION RESULTS:
    ❌ Unknown validation
@@ -104,11 +100,11 @@ URL: http://localhost:5000
 TEST 3/4: Success Criteria
 ------------------------------------------------------------
 Status: ❌ FAILED
-Duration: 1.6s
+Duration: 836ms
 URL: http://localhost:5000
 
 💥 ERROR DETAILS:
-   Issues found during testing
+   Agent execution failed: Agent 0: Agent 0 failed to produce results - likely due to API issues
 
 ✅ VALIDATION RESULTS:
    ❌ Unknown validation
@@ -132,11 +128,11 @@ URL: http://localhost:5000
 TEST 4/4: Notes
 ------------------------------------------------------------
 Status: ❌ FAILED
-Duration: 1.6s
+Duration: 836ms
 URL: http://localhost:5000
 
 💥 ERROR DETAILS:
-   Issues found during testing
+   Agent execution failed: Agent 0: Agent 0 failed to produce results - likely due to API issues
 
 ✅ VALIDATION RESULTS:
    ❌ Unknown validation
@@ -160,7 +156,7 @@ URL: http://localhost:5000
 ========================================
 Total Tests Executed: 4
 Overall Success Rate: 0.0%
-Total Execution Time: 6.3s
+Total Execution Time: 3.3s
 
 📋 For detailed analysis and visual reports, check the HTML output.
 🔧 For technical support, review the console logs above.

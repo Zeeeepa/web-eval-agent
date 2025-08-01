@@ -1,0 +1,332 @@
+{
+  "success": true,
+  "session_id": "b0446c2b-6fe0-4a08-b8d7-8c0c7474bba7",
+  "total_scenarios": 7,
+  "results": [
+    "TestScenarioResult(scenario_name='Test Objective', status='failed', duration=1.043318748474121, agent_id=0, issues=[], interactions=[], console_summary=None, network_summary=None, performance_summary=None, error_message='Issues found during testing', success_criteria_met=[], success_criteria_failed=['Verify that basic website navigation elements are functional and accessible.'])",
+    "TestScenarioResult(scenario_name='Test Scenarios', status='failed', duration=1.043318748474121, agent_id=1, issues=[], interactions=[], console_summary=None, network_summary=None, performance_summary=None, error_message='Issues found during testing', success_criteria_met=[], success_criteria_failed=['The test failed, indicating that at least one success criteria was not met.'])",
+    "TestScenarioResult(scenario_name='Navigation Links', status='failed', duration=1.043318748474121, agent_id=2, issues=[TestIssue(id='issue_0', title='Navigation Links Issues Found', description='The test failed, indicating problems with the navigation links. This could include broken links (404 errors), incorrect page destinations, or inconsistencies in the navigation menu across different pages.', category=<IssueCategory.FUNCTIONALITY: 'functionality'>, severity=<ReportSeverity.MEDIUM: 'medium'>, location=None, screenshot_path=None, browser_context=None, reproduction_steps=[], recommendations=[], related_console_errors=[], related_network_issues=[], performance_impact=None, timestamp=1754058502.9015155)], interactions=[], console_summary=None, network_summary=None, performance_summary=None, error_message='Issues found during testing', success_criteria_met=[], success_criteria_failed=['Test all navigation menu items', 'Verify links lead to correct pages', 'Check for broken links or 404 errors', 'Ensure navigation is consistent across pages'])",
+    "TestScenarioResult(scenario_name='Header and Footer', status='failed', duration=1.043318748474121, agent_id=3, issues=[TestIssue(id='issue_0', title='Header Navigation Issues', description='Issues were found with the header navigation elements.  Further investigation is needed to determine the specific problems (e.g., broken links, incorrect navigation, responsiveness issues).', category=<IssueCategory.FUNCTIONALITY: 'functionality'>, severity=<ReportSeverity.HIGH: 'high'>, location=None, screenshot_path=None, browser_context=None, reproduction_steps=[], recommendations=[], related_console_errors=[], related_network_issues=[], performance_impact=None, timestamp=1754058505.4741833), TestIssue(id='issue_1', title='Footer Link Failures', description='Footer links are not functioning as expected. This could include broken links, incorrect destinations, or links that do not open in the correct way (e.g., new tab).', category=<IssueCategory.FUNCTIONALITY: 'functionality'>, severity=<ReportSeverity.HIGH: 'high'>, location=None, screenshot_path=None, browser_context=None, reproduction_steps=[], recommendations=[], related_console_errors=[], related_network_issues=[], performance_impact=None, timestamp=1754058505.4741886), TestIssue(id='issue_2', title='Contact Information and Social Media Link Problems', description='The contact information displayed in the footer or header is either incorrect, missing, or the social media links are broken or lead to the wrong pages.', category=<IssueCategory.CONTENT: 'content'>, severity=<ReportSeverity.MEDIUM: 'medium'>, location=None, screenshot_path=None, browser_context=None, reproduction_steps=[], recommendations=[], related_console_errors=[], related_network_issues=[], performance_impact=None, timestamp=1754058505.4741921), TestIssue(id='issue_3', title='Logo/Home Link Broken', description='The logo or home link does not redirect to the homepage or is broken.', category=<IssueCategory.FUNCTIONALITY: 'functionality'>, severity=<ReportSeverity.HIGH: 'high'>, location=None, screenshot_path=None, browser_context=None, reproduction_steps=[], recommendations=[], related_console_errors=[], related_network_issues=[], performance_impact=None, timestamp=1754058505.4741952)], interactions=[], console_summary=None, network_summary=None, performance_summary=None, error_message='Issues found during testing', success_criteria_met=[], success_criteria_failed=['Test header navigation elements', 'Verify footer links functionality', 'Check contact information and social media links', 'Test logo/home link functionality'])",
+    "TestScenarioResult(scenario_name='Breadcrumbs', status='failed', duration=1.043318748474121, agent_id=4, issues=[TestIssue(id='issue_0', title='Breadcrumb Navigation Issues', description='Issues were found during testing of breadcrumb navigation. Further investigation is required to determine the specific problems.', category=<IssueCategory.FUNCTIONALITY: 'functionality'>, severity=<ReportSeverity.MEDIUM: 'medium'>, location=None, screenshot_path=None, browser_context=None, reproduction_steps=[], recommendations=[], related_console_errors=[], related_network_issues=[], performance_impact=None, timestamp=1754058506.5034232)], interactions=[], console_summary=None, network_summary=None, performance_summary=None, error_message='Issues found during testing', success_criteria_met=[], success_criteria_failed=['Verify breadcrumb navigation if present', 'Test breadcrumb link functionality', 'Check breadcrumb accuracy'])",
+    "TestScenarioResult(scenario_name='Success Criteria', status='failed', duration=1.043318748474121, agent_id=5, issues=[TestIssue(id='issue_0', title='Navigation Links Broken', description='At least one navigation link is not functioning correctly, leading to an error or incorrect page.', category=<IssueCategory.FUNCTIONALITY: 'functionality'>, severity=<ReportSeverity.HIGH: 'high'>, location=None, screenshot_path=None, browser_context=None, reproduction_steps=[], recommendations=[], related_console_errors=[], related_network_issues=[], performance_impact=None, timestamp=1754058508.8815439), TestIssue(id='issue_1', title='Broken Links/404 Errors', description='The test identified one or more broken links resulting in 404 errors. This negatively impacts user experience.', category=<IssueCategory.FUNCTIONALITY: 'functionality'>, severity=<ReportSeverity.HIGH: 'high'>, location=None, screenshot_path=None, browser_context=None, reproduction_steps=[], recommendations=[], related_console_errors=[], related_network_issues=[], performance_impact=None, timestamp=1754058508.881548), TestIssue(id='issue_2', title='Navigation Not Intuitive/Consistent', description='The navigation structure is not intuitive or consistent, potentially confusing users and hindering their ability to find information.', category=<IssueCategory.USABILITY: 'usability'>, severity=<ReportSeverity.MEDIUM: 'medium'>, location=None, screenshot_path=None, browser_context=None, reproduction_steps=[], recommendations=[], related_console_errors=[], related_network_issues=[], performance_impact=None, timestamp=1754058508.881552), TestIssue(id='issue_3', title='Interactive Elements Not Responding', description='One or more interactive elements (e.g., buttons, forms) are not responding as expected, preventing users from completing actions.', category=<IssueCategory.FUNCTIONALITY: 'functionality'>, severity=<ReportSeverity.MEDIUM: 'medium'>, location=None, screenshot_path=None, browser_context=None, reproduction_steps=[], recommendations=[], related_console_errors=[], related_network_issues=[], performance_impact=None, timestamp=1754058508.8815548)], interactions=[], console_summary=None, network_summary=None, performance_summary=None, error_message='Issues found during testing', success_criteria_met=[], success_criteria_failed=['All navigation links work correctly', 'No broken links or 404 errors', 'Navigation is intuitive and consistent', 'All interactive elements respond appropriately'])",
+    "TestScenarioResult(scenario_name='Notes', status='failed', duration=1.043318748474121, agent_id=6, issues=[TestIssue(id='issue_0', title='Functional Test Failure: Core Navigation Elements', description=\"The 'Notes' functional test, focusing on core navigation elements, failed. The specific cause is unknown but the error message 'Issues found during testing' indicates a problem with the navigation functionality within the 'Notes' feature.\", category=<IssueCategory.FUNCTIONALITY: 'functionality'>, severity=<ReportSeverity.HIGH: 'high'>, location=None, screenshot_path=None, browser_context=None, reproduction_steps=[], recommendations=[], related_console_errors=[], related_network_issues=[], performance_impact=None, timestamp=1754058510.2664697)], interactions=[], console_summary=None, network_summary=None, performance_summary=None, error_message='Issues found during testing', success_criteria_met=[], success_criteria_failed=[\"All success criteria for the 'Notes' functional test\"])"
+  ],
+  "report": {
+    "report_metadata": {
+      "generated_at": "2025-08-01T14:28:30.266744",
+      "test_duration": 32.27203631401062,
+      "total_scenarios": 7,
+      "report_version": "2.0"
+    },
+    "executive_summary": {
+      "overall_status": "Multiple Failures",
+      "total_scenarios": 7,
+      "passed_scenarios": 0,
+      "failed_scenarios": 7,
+      "critical_issues": 0,
+      "high_priority_issues": 6,
+      "performance_score": 50.0,
+      "accessibility_score": 85.0,
+      "security_score": 90.0,
+      "key_findings": [
+        "Most common issue type: functionality (9 issues)"
+      ],
+      "business_impact": "MEDIUM-HIGH IMPACT: Multiple high-priority issues may degrade user experience and reduce conversion rates.",
+      "recommended_actions": [
+        "\u26a0\ufe0f HIGH PRIORITY: Resolve 6 high-priority issues",
+        "\ud83d\udccb Implement systematic issue tracking and resolution process",
+        "\ud83d\udd04 Re-test after fixes to verify resolution"
+      ]
+    },
+    "test_results": [
+      {
+        "scenario_name": "Test Objective",
+        "status": "failed",
+        "duration": 1.043318748474121,
+        "agent_id": 0,
+        "error_message": "Issues found during testing",
+        "issues_count": 0,
+        "success_criteria_met": [],
+        "success_criteria_failed": [
+          "Verify that basic website navigation elements are functional and accessible."
+        ],
+        "console_summary": null,
+        "network_summary": null,
+        "performance_summary": null
+      },
+      {
+        "scenario_name": "Test Scenarios",
+        "status": "failed",
+        "duration": 1.043318748474121,
+        "agent_id": 1,
+        "error_message": "Issues found during testing",
+        "issues_count": 0,
+        "success_criteria_met": [],
+        "success_criteria_failed": [
+          "The test failed, indicating that at least one success criteria was not met."
+        ],
+        "console_summary": null,
+        "network_summary": null,
+        "performance_summary": null
+      },
+      {
+        "scenario_name": "Navigation Links",
+        "status": "failed",
+        "duration": 1.043318748474121,
+        "agent_id": 2,
+        "error_message": "Issues found during testing",
+        "issues_count": 1,
+        "success_criteria_met": [],
+        "success_criteria_failed": [
+          "Test all navigation menu items",
+          "Verify links lead to correct pages",
+          "Check for broken links or 404 errors",
+          "Ensure navigation is consistent across pages"
+        ],
+        "console_summary": null,
+        "network_summary": null,
+        "performance_summary": null
+      },
+      {
+        "scenario_name": "Header and Footer",
+        "status": "failed",
+        "duration": 1.043318748474121,
+        "agent_id": 3,
+        "error_message": "Issues found during testing",
+        "issues_count": 4,
+        "success_criteria_met": [],
+        "success_criteria_failed": [
+          "Test header navigation elements",
+          "Verify footer links functionality",
+          "Check contact information and social media links",
+          "Test logo/home link functionality"
+        ],
+        "console_summary": null,
+        "network_summary": null,
+        "performance_summary": null
+      },
+      {
+        "scenario_name": "Breadcrumbs",
+        "status": "failed",
+        "duration": 1.043318748474121,
+        "agent_id": 4,
+        "error_message": "Issues found during testing",
+        "issues_count": 1,
+        "success_criteria_met": [],
+        "success_criteria_failed": [
+          "Verify breadcrumb navigation if present",
+          "Test breadcrumb link functionality",
+          "Check breadcrumb accuracy"
+        ],
+        "console_summary": null,
+        "network_summary": null,
+        "performance_summary": null
+      },
+      {
+        "scenario_name": "Success Criteria",
+        "status": "failed",
+        "duration": 1.043318748474121,
+        "agent_id": 5,
+        "error_message": "Issues found during testing",
+        "issues_count": 4,
+        "success_criteria_met": [],
+        "success_criteria_failed": [
+          "All navigation links work correctly",
+          "No broken links or 404 errors",
+          "Navigation is intuitive and consistent",
+          "All interactive elements respond appropriately"
+        ],
+        "console_summary": null,
+        "network_summary": null,
+        "performance_summary": null
+      },
+      {
+        "scenario_name": "Notes",
+        "status": "failed",
+        "duration": 1.043318748474121,
+        "agent_id": 6,
+        "error_message": "Issues found during testing",
+        "issues_count": 1,
+        "success_criteria_met": [],
+        "success_criteria_failed": [
+          "All success criteria for the 'Notes' functional test"
+        ],
+        "console_summary": null,
+        "network_summary": null,
+        "performance_summary": null
+      }
+    ],
+    "issues": [
+      {
+        "id": "issue_0",
+        "title": "Navigation Links Issues Found",
+        "description": "The test failed, indicating problems with the navigation links. This could include broken links (404 errors), incorrect page destinations, or inconsistencies in the navigation menu across different pages.",
+        "category": "functionality",
+        "severity": "medium",
+        "location": null,
+        "timestamp": 1754058502.9015155,
+        "recommendations": [],
+        "related_console_errors": [],
+        "related_network_issues": [],
+        "performance_impact": null,
+        "reproduction_steps": []
+      },
+      {
+        "id": "issue_0",
+        "title": "Header Navigation Issues",
+        "description": "Issues were found with the header navigation elements.  Further investigation is needed to determine the specific problems (e.g., broken links, incorrect navigation, responsiveness issues).",
+        "category": "functionality",
+        "severity": "high",
+        "location": null,
+        "timestamp": 1754058505.4741833,
+        "recommendations": [],
+        "related_console_errors": [],
+        "related_network_issues": [],
+        "performance_impact": null,
+        "reproduction_steps": []
+      },
+      {
+        "id": "issue_1",
+        "title": "Footer Link Failures",
+        "description": "Footer links are not functioning as expected. This could include broken links, incorrect destinations, or links that do not open in the correct way (e.g., new tab).",
+        "category": "functionality",
+        "severity": "high",
+        "location": null,
+        "timestamp": 1754058505.4741886,
+        "recommendations": [],
+        "related_console_errors": [],
+        "related_network_issues": [],
+        "performance_impact": null,
+        "reproduction_steps": []
+      },
+      {
+        "id": "issue_2",
+        "title": "Contact Information and Social Media Link Problems",
+        "description": "The contact information displayed in the footer or header is either incorrect, missing, or the social media links are broken or lead to the wrong pages.",
+        "category": "content",
+        "severity": "medium",
+        "location": null,
+        "timestamp": 1754058505.4741921,
+        "recommendations": [],
+        "related_console_errors": [],
+        "related_network_issues": [],
+        "performance_impact": null,
+        "reproduction_steps": []
+      },
+      {
+        "id": "issue_3",
+        "title": "Logo/Home Link Broken",
+        "description": "The logo or home link does not redirect to the homepage or is broken.",
+        "category": "functionality",
+        "severity": "high",
+        "location": null,
+        "timestamp": 1754058505.4741952,
+        "recommendations": [],
+        "related_console_errors": [],
+        "related_network_issues": [],
+        "performance_impact": null,
+        "reproduction_steps": []
+      },
+      {
+        "id": "issue_0",
+        "title": "Breadcrumb Navigation Issues",
+        "description": "Issues were found during testing of breadcrumb navigation. Further investigation is required to determine the specific problems.",
+        "category": "functionality",
+        "severity": "medium",
+        "location": null,
+        "timestamp": 1754058506.5034232,
+        "recommendations": [],
+        "related_console_errors": [],
+        "related_network_issues": [],
+        "performance_impact": null,
+        "reproduction_steps": []
+      },
+      {
+        "id": "issue_0",
+        "title": "Navigation Links Broken",
+        "description": "At least one navigation link is not functioning correctly, leading to an error or incorrect page.",
+        "category": "functionality",
+        "severity": "high",
+        "location": null,
+        "timestamp": 1754058508.8815439,
+        "recommendations": [],
+        "related_console_errors": [],
+        "related_network_issues": [],
+        "performance_impact": null,
+        "reproduction_steps": []
+      },
+      {
+        "id": "issue_1",
+        "title": "Broken Links/404 Errors",
+        "description": "The test identified one or more broken links resulting in 404 errors. This negatively impacts user experience.",
+        "category": "functionality",
+        "severity": "high",
+        "location": null,
+        "timestamp": 1754058508.881548,
+        "recommendations": [],
+        "related_console_errors": [],
+        "related_network_issues": [],
+        "performance_impact": null,
+        "reproduction_steps": []
+      },
+      {
+        "id": "issue_2",
+        "title": "Navigation Not Intuitive/Consistent",
+        "description": "The navigation structure is not intuitive or consistent, potentially confusing users and hindering their ability to find information.",
+        "category": "usability",
+        "severity": "medium",
+        "location": null,
+        "timestamp": 1754058508.881552,
+        "recommendations": [],
+        "related_console_errors": [],
+        "related_network_issues": [],
+        "performance_impact": null,
+        "reproduction_steps": []
+      },
+      {
+        "id": "issue_3",
+        "title": "Interactive Elements Not Responding",
+        "description": "One or more interactive elements (e.g., buttons, forms) are not responding as expected, preventing users from completing actions.",
+        "category": "functionality",
+        "severity": "medium",
+        "location": null,
+        "timestamp": 1754058508.8815548,
+        "recommendations": [],
+        "related_console_errors": [],
+        "related_network_issues": [],
+        "performance_impact": null,
+        "reproduction_steps": []
+      },
+      {
+        "id": "issue_0",
+        "title": "Functional Test Failure: Core Navigation Elements",
+        "description": "The 'Notes' functional test, focusing on core navigation elements, failed. The specific cause is unknown but the error message 'Issues found during testing' indicates a problem with the navigation functionality within the 'Notes' feature.",
+        "category": "functionality",
+        "severity": "high",
+        "location": null,
+        "timestamp": 1754058510.2664697,
+        "recommendations": [],
+        "related_console_errors": [],
+        "related_network_issues": [],
+        "performance_impact": null,
+        "reproduction_steps": []
+      }
+    ],
+    "browser_context_analysis": {
+      "console_analysis": null,
+      "network_analysis": null,
+      "performance_analysis": null,
+      "interaction_analysis": null
+    },
+    "recommendations": {
+      "immediate_actions": [],
+      "high_priority_actions": [
+        "\u26a0\ufe0f HIGH PRIORITY: Resolve 6 high-priority issues"
+      ],
+      "general_improvements": [
+        "\ud83d\udccb Implement systematic issue tracking and resolution process",
+        "\ud83d\udd04 Re-test after fixes to verify resolution"
+      ]
+    }
+  }
+}
