@@ -1,58 +1,65 @@
 ====================================================================================================
 🧪 WEB EVALUATION AGENT - MULTI-AGENT TEST REPORT
 ====================================================================================================
-📅 Generated: 2025-08-01 13:27:37
+📅 Generated: 2025-08-01 13:40:43
 🌐 Target URL: http://localhost:5000
-⏱️  Total Duration: 3.4s
+⏱️  Total Duration: 6.3s
 🤖 Agents Used: 1
 🔧 Configuration: chromium | 1280x720 | Headless
 
 🤖 AI ANALYSIS SUMMARY
 ----------------------------------------
-🟡 Overall Status: AI analysis unavailable (API key required). Manual review recommended.
+🔴 Overall Status: Critical issues found that need immediate attention
 🔍 Total Issues Found: 1
 
 📊 SEVERITY BREAKDOWN
 ----------------------------------------
-🔴 High Severity: 0 issues
+🔴 High Severity: 1 issues
 🟠 Medium Severity: 0 issues
-🟡 Low Severity: 1 issues
+🟡 Low Severity: 0 issues
 
-🟡 LOW SEVERITY ISSUES
+🔴 HIGH SEVERITY ISSUES
 ----------------------------------------
-1. GENERAL
-   Found 1 potential issues requiring manual review
+1. ACCESSIBILITY
+   The page failed to load at http://localhost:5000/. This prevents users from accessing any content or functionality.
 
 📊 EXECUTIVE SUMMARY
 ----------------------------------------
-✅ Tests Passed: 4/4
-❌ Tests Failed: 0/4
-📈 Success Rate: 100.0%
+✅ Tests Passed: 0/4
+❌ Tests Failed: 4/4
+📈 Success Rate: 0.0%
 🤖 Multi-Agent Mode: 1 agents
 🔍 Scout Mode: Enabled
 ⚡ Parallel Execution: Enabled
 
 📋 TEST RESULTS OVERVIEW
 ----------------------------------------
- 1. ✅ Test Objective (856ms)
- 2. ✅ Test Scenarios (856ms)
- 3. ✅ Success Criteria (856ms)
- 4. ✅ Notes (856ms)
+ 1. ❌ Test Objective (1.6s)
+     💥 Error: Issues found during testing
+ 2. ❌ Test Scenarios (1.6s)
+     💥 Error: Issues found during testing
+ 3. ❌ Success Criteria (1.6s)
+     💥 Error: Issues found during testing
+ 4. ❌ Notes (1.6s)
+     💥 Error: Issues found during testing
 
 🔍 DETAILED TEST RESULTS
 ================================================================================
 
 TEST 1/4: Test Objective
 ------------------------------------------------------------
-Status: ✅ PASSED
-Duration: 856ms
+Status: ❌ FAILED
+Duration: 1.6s
 URL: http://localhost:5000
+
+💥 ERROR DETAILS:
+   Issues found during testing
 
 ✅ VALIDATION RESULTS:
    ❌ Unknown validation
 
 🤖 AGENT EXECUTION STEPS:
-    1. Agent 0 completed task but returned no specific findings. Task: Test navigation elements in the header area of http://localhost:5000
+    1. The page failed to load. The specific error is that the page at http://localhost:5000/ is unavailable.
 
 🖥️  CONSOLE LOGS (0 total):
    No console logs captured
@@ -68,9 +75,12 @@ URL: http://localhost:5000
 
 TEST 2/4: Test Scenarios
 ------------------------------------------------------------
-Status: ✅ PASSED
-Duration: 856ms
+Status: ❌ FAILED
+Duration: 1.6s
 URL: http://localhost:5000
+
+💥 ERROR DETAILS:
+   Issues found during testing
 
 ✅ VALIDATION RESULTS:
    ❌ Unknown validation
@@ -93,9 +103,12 @@ URL: http://localhost:5000
 
 TEST 3/4: Success Criteria
 ------------------------------------------------------------
-Status: ✅ PASSED
-Duration: 856ms
+Status: ❌ FAILED
+Duration: 1.6s
 URL: http://localhost:5000
+
+💥 ERROR DETAILS:
+   Issues found during testing
 
 ✅ VALIDATION RESULTS:
    ❌ Unknown validation
@@ -118,9 +131,12 @@ URL: http://localhost:5000
 
 TEST 4/4: Notes
 ------------------------------------------------------------
-Status: ✅ PASSED
-Duration: 856ms
+Status: ❌ FAILED
+Duration: 1.6s
 URL: http://localhost:5000
+
+💥 ERROR DETAILS:
+   Issues found during testing
 
 ✅ VALIDATION RESULTS:
    ❌ Unknown validation
@@ -143,8 +159,8 @@ URL: http://localhost:5000
 🎯 REPORT SUMMARY
 ========================================
 Total Tests Executed: 4
-Overall Success Rate: 100.0%
-Total Execution Time: 3.4s
+Overall Success Rate: 0.0%
+Total Execution Time: 6.3s
 
 📋 For detailed analysis and visual reports, check the HTML output.
 🔧 For technical support, review the console logs above.

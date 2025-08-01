@@ -165,9 +165,26 @@ class TestExecutor:
                 else:
                     result_text = str(history)
                 
-                # Ensure we have meaningful content
+                # Check if the result indicates an API failure
                 if not result_text or result_text.strip() in ['None', '', 'null']:
-                    result_text = f"Agent {agent_id} completed task but returned no specific findings. Task: {task_description}"
+                    # This likely means the agent failed to execute properly
+                    return {
+                        "agent_id": agent_id,
+                        "task": task_description,
+                        "error": f"Agent {agent_id} failed to produce results - likely due to API issues",
+                        "timestamp": time.time(),
+                        "status": "error"
+                    }
+                
+                # Check if result contains API error indicators
+                if any(indicator in result_text.lower() for indicator in ['api key not valid', 'api_key_invalid', 'invalid argument provided to gemini']):
+                    return {
+                        "agent_id": agent_id,
+                        "task": task_description,
+                        "error": f"Agent {agent_id} failed due to API issues: {result_text[:100]}...",
+                        "timestamp": time.time(),
+                        "status": "error"
+                    }
                 
                 return {
                     "agent_id": agent_id,
@@ -272,28 +289,39 @@ class TestExecutor:
                 # Handle unexpected result format
                 errors.append(f"Agent {result.get('agent_id', 'unknown')}: Unexpected result format")
         
+
         # Generate AI-powered analysis
         analysis_result = await self._analyze_findings(bug_reports, test_data["url"])
         
         # Create test results
         test_results = []
         
+        # If we have agent errors but no successful results, all tests should fail
+        has_global_agent_failures = len(errors) > 0 and len(bug_reports) == 0
+        
         # Create a result for each original scenario
         for i, scenario in enumerate(original_scenarios):
             # Find corresponding agent results
             scenario_findings = []
-            for report in bug_reports:
-                if i < len(bug_reports):  # Map scenarios to findings
-                    scenario_findings.append(report["findings"])
             
-            # Determine if test passed based on analysis
-            passed = self._determine_test_status(analysis_result, scenario_findings)
+            # Check if we have any successful agent results for this scenario
+            if i < len(bug_reports):
+                scenario_findings.append(bug_reports[i]["findings"])
+            
+            # If there are global agent failures, all tests should fail
+            if has_global_agent_failures:
+                passed = False
+                error_message = f"Agent execution failed: {errors[0] if errors else 'All agents failed to execute'}"
+            else:
+                # Determine if test passed based on analysis
+                passed = self._determine_test_status(analysis_result, scenario_findings)
+                error_message = None if passed else "Issues found during testing"
             
             test_result = TestResult(
                 scenario_name=scenario.name,
                 passed=passed,
                 duration=test_data["duration"] / len(original_scenarios),  # Distribute duration
-                error_message=None if passed else "Issues found during testing",
+                error_message=error_message,
                 agent_steps=scenario_findings,
                 validation_results=[analysis_result] if analysis_result else []
             )
@@ -460,17 +488,28 @@ Only include real issues found during testing. Provide clear, concise descriptio
     
     def _determine_test_status(self, analysis_result: Dict[str, Any], findings: List[str]) -> bool:
         """Determine if a test passed based on analysis results."""
-        if not analysis_result:
-            return len(findings) == 0
+        # If no analysis result and no findings, it means agents failed to execute
+        if not analysis_result and len(findings) == 0:
+            return False  # This is a failure, not a pass
         
-        # Test fails if there are high severity issues
-        high_severity_count = len(analysis_result.get("severity_breakdown", {}).get("high_severity", []))
-        if high_severity_count > 0:
-            return False
+        # If we have analysis results, use them
+        if analysis_result:
+            # Check if analysis failed due to API issues
+            if analysis_result.get("fallback_analysis", False):
+                # If we have findings despite API failure, consider it a partial success
+                return len(findings) > 0
+            
+            # Test fails if there are high severity issues
+            high_severity_count = len(analysis_result.get("severity_breakdown", {}).get("high_severity", []))
+            if high_severity_count > 0:
+                return False
+            
+            # Test passes if no issues or only low severity issues
+            overall_status = analysis_result.get("overall_status", "passing")
+            return overall_status in ["passing", "low-severity"]
         
-        # Test passes if no issues or only low severity issues
-        overall_status = analysis_result.get("overall_status", "passing")
-        return overall_status in ["passing", "low-severity"]
+        # Fallback: if we have findings but no analysis, consider it a partial success
+        return len(findings) > 0
     
     def get_test_results(self, test_id: str) -> Optional[Dict[str, Any]]:
         """Get stored test results by ID."""
