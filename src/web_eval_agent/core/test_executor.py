@@ -120,14 +120,30 @@ class TestExecutor:
         # Run agents in parallel with semaphore limiting
         async def run_single_agent(agent_id: int):
             task_description = qa_tasks[agent_id % len(qa_tasks)]
+            session = None
             
             try:
-                # Create browser session
-                session = await self.session_manager.create_session(agent_id)
+                # Create browser session with timeout
+                session = await asyncio.wait_for(
+                    self.session_manager.create_session(agent_id),
+                    timeout=30.0
+                )
                 
-                # Create and run agent
+                # Enhanced task description with better error handling instructions
+                enhanced_task = f"""
+                Navigate to {self.config.url} and {task_description}
+                
+                IMPORTANT INSTRUCTIONS:
+                - If the page fails to load, report the specific error
+                - If elements are not found, describe what you can see instead
+                - If any action fails, explain what happened and what you observed
+                - Focus on functional testing, not subjective opinions
+                - Report specific technical issues like broken links, form errors, or JavaScript errors
+                """
+                
+                # Create and run agent with timeout
                 agent = Agent(
-                    task=task_description,
+                    task=enhanced_task,
                     llm=self.llm,
                     browser=session.browser,
                     use_vision=True
@@ -135,35 +151,62 @@ class TestExecutor:
                 
                 print(f"🤖 Agent {agent_id}: {task_description[:60]}...")
                 
-                history = await agent.run()
+                # Run agent with timeout
+                history = await asyncio.wait_for(
+                    agent.run(),
+                    timeout=self.config.timeout
+                )
                 
-                # Close session
-                await self.session_manager.close_session(agent_id)
+                # Extract result with better error handling
+                if hasattr(history, 'final_result') and callable(history.final_result):
+                    result_text = str(history.final_result())
+                elif hasattr(history, 'result'):
+                    result_text = str(history.result)
+                else:
+                    result_text = str(history)
                 
-                result_text = str(history.final_result()) if hasattr(history, 'final_result') else str(history)
+                # Ensure we have meaningful content
+                if not result_text or result_text.strip() in ['None', '', 'null']:
+                    result_text = f"Agent {agent_id} completed task but returned no specific findings. Task: {task_description}"
                 
                 return {
                     "agent_id": agent_id,
                     "task": task_description,
                     "result": result_text,
                     "timestamp": time.time(),
-                    "status": "success"
+                    "status": "success",
+                    "duration": time.time() - start_time
                 }
                 
-            except Exception as e:
-                # Ensure session cleanup on error
-                try:
-                    await self.session_manager.close_session(agent_id)
-                except:
-                    pass
-                    
+            except asyncio.TimeoutError:
+                error_msg = f"Agent {agent_id} timed out after {self.config.timeout}s"
+                print(f"⏰ {error_msg}")
                 return {
                     "agent_id": agent_id,
                     "task": task_description,
-                    "error": str(e),
+                    "error": error_msg,
+                    "timestamp": time.time(),
+                    "status": "timeout"
+                }
+                
+            except Exception as e:
+                error_msg = f"Agent {agent_id} failed: {str(e)}"
+                print(f"❌ {error_msg}")
+                return {
+                    "agent_id": agent_id,
+                    "task": task_description,
+                    "error": error_msg,
                     "timestamp": time.time(),
                     "status": "error"
                 }
+                
+            finally:
+                # Ensure session cleanup
+                if session:
+                    try:
+                        await self.session_manager.close_session(agent_id)
+                    except Exception as cleanup_error:
+                        print(f"⚠️ Failed to cleanup session {agent_id}: {cleanup_error}")
         
         # Execute agents with semaphore control
         results = await asyncio.gather(
@@ -209,7 +252,11 @@ class TestExecutor:
         errors = []
         
         for result in test_data["results"]:
-            if result["status"] == "success":
+            if isinstance(result, Exception):
+                errors.append(f"Agent execution exception: {str(result)}")
+                continue
+                
+            if result.get("status") == "success":
                 agent_results.append(result)
                 if "result" in result and result["result"]:
                     bug_reports.append({
@@ -218,8 +265,12 @@ class TestExecutor:
                         "findings": result["result"],
                         "timestamp": result["timestamp"]
                     })
+            elif result.get("status") in ["error", "timeout"]:
+                error_msg = result.get('error', 'Unknown error')
+                errors.append(f"Agent {result['agent_id']}: {error_msg}")
             else:
-                errors.append(f"Agent {result['agent_id']}: {result.get('error', 'Unknown error')}")
+                # Handle unexpected result format
+                errors.append(f"Agent {result.get('agent_id', 'unknown')}: Unexpected result format")
         
         # Generate AI-powered analysis
         analysis_result = await self._analyze_findings(bug_reports, test_data["url"])
@@ -381,18 +432,30 @@ Only include real issues found during testing. Provide clear, concise descriptio
             }
             
         except Exception as e:
-            # Fallback analysis
+            print(f"⚠️ AI analysis failed: {e}")
+            # Fallback analysis with better error handling
+            if "API key not valid" in str(e) or "API_KEY_INVALID" in str(e):
+                status_description = "AI analysis unavailable (API key required). Manual review recommended."
+                analysis_error = "Invalid API key - please set a valid GEMINI_API_KEY"
+            elif "quota" in str(e).lower() or "limit" in str(e).lower():
+                status_description = "AI analysis unavailable (API quota exceeded). Manual review recommended."
+                analysis_error = "API quota exceeded"
+            else:
+                status_description = f"AI analysis failed. Manual review recommended. Error: {str(e)[:100]}"
+                analysis_error = str(e)
+            
             return {
                 "overall_status": "low-severity" if bug_reports else "passing",
                 "status_emoji": "🟡" if bug_reports else "✅",
-                "status_description": f"Found {len(bug_reports)} potential issues requiring manual review" if bug_reports else "No technical issues detected during testing",
+                "status_description": status_description,
                 "total_issues": len(bug_reports),
                 "severity_breakdown": {
                     "high_severity": [],
                     "medium_severity": [],
                     "low_severity": [{"category": "general", "description": f"Found {len(bug_reports)} potential issues requiring manual review"}] if bug_reports else []
                 },
-                "llm_analysis_error": str(e)
+                "llm_analysis_error": analysis_error,
+                "fallback_analysis": True
             }
     
     def _determine_test_status(self, analysis_result: Dict[str, Any], findings: List[str]) -> bool:

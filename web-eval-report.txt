@@ -1,15 +1,15 @@
 ====================================================================================================
 🧪 WEB EVALUATION AGENT - MULTI-AGENT TEST REPORT
 ====================================================================================================
-📅 Generated: 2025-08-01 13:11:52
+📅 Generated: 2025-08-01 13:27:37
 🌐 Target URL: http://localhost:5000
-⏱️  Total Duration: 3.7s
+⏱️  Total Duration: 3.4s
 🤖 Agents Used: 1
 🔧 Configuration: chromium | 1280x720 | Headless
 
 🤖 AI ANALYSIS SUMMARY
 ----------------------------------------
-🟡 Overall Status: Found 1 potential issues requiring manual review
+🟡 Overall Status: AI analysis unavailable (API key required). Manual review recommended.
 🔍 Total Issues Found: 1
 
 📊 SEVERITY BREAKDOWN
@@ -34,10 +34,10 @@
 
 📋 TEST RESULTS OVERVIEW
 ----------------------------------------
- 1. ✅ Test Objective (931ms)
- 2. ✅ Test Scenarios (931ms)
- 3. ✅ Success Criteria (931ms)
- 4. ✅ Notes (931ms)
+ 1. ✅ Test Objective (856ms)
+ 2. ✅ Test Scenarios (856ms)
+ 3. ✅ Success Criteria (856ms)
+ 4. ✅ Notes (856ms)
 
 🔍 DETAILED TEST RESULTS
 ================================================================================
@@ -45,14 +45,14 @@
 TEST 1/4: Test Objective
 ------------------------------------------------------------
 Status: ✅ PASSED
-Duration: 931ms
+Duration: 856ms
 URL: http://localhost:5000
 
 ✅ VALIDATION RESULTS:
    ❌ Unknown validation
 
 🤖 AGENT EXECUTION STEPS:
-    1. None
+    1. Agent 0 completed task but returned no specific findings. Task: Test navigation elements in the header area of http://localhost:5000
 
 🖥️  CONSOLE LOGS (0 total):
    No console logs captured
@@ -69,7 +69,7 @@ URL: http://localhost:5000
 TEST 2/4: Test Scenarios
 ------------------------------------------------------------
 Status: ✅ PASSED
-Duration: 931ms
+Duration: 856ms
 URL: http://localhost:5000
 
 ✅ VALIDATION RESULTS:
@@ -94,7 +94,7 @@ URL: http://localhost:5000
 TEST 3/4: Success Criteria
 ------------------------------------------------------------
 Status: ✅ PASSED
-Duration: 931ms
+Duration: 856ms
 URL: http://localhost:5000
 
 ✅ VALIDATION RESULTS:
@@ -119,7 +119,7 @@ URL: http://localhost:5000
 TEST 4/4: Notes
 ------------------------------------------------------------
 Status: ✅ PASSED
-Duration: 931ms
+Duration: 856ms
 URL: http://localhost:5000
 
 ✅ VALIDATION RESULTS:
@@ -144,7 +144,7 @@ URL: http://localhost:5000
 ========================================
 Total Tests Executed: 4
 Overall Success Rate: 100.0%
-Total Execution Time: 3.7s
+Total Execution Time: 3.4s
 
 📋 For detailed analysis and visual reports, check the HTML output.
 🔧 For technical support, review the console logs above.

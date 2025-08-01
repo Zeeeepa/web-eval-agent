@@ -301,6 +301,36 @@ python -m web_eval_agent \
   --output-file reports/my-app-test.html
 ```
 
+## 📋 Test Scenarios & Templates
+
+The framework includes comprehensive test scenarios organized by complexity:
+
+### 🟢 Basic Tests
+- **Navigation Test** (`test-scenarios/basic/navigation-test.md`) - Test navigation menus, links, and basic functionality
+- **Form Validation** (`test-scenarios/basic/form-validation.md`) - Test form fields, validation, and submission
+
+### 🟡 Intermediate Tests  
+- **Accessibility Audit** (`test-scenarios/intermediate/accessibility-audit.md`) - WCAG compliance and accessibility testing
+
+### 🔴 Advanced Tests
+- **Performance & Security** (`test-scenarios/advanced/performance-security.md`) - Performance metrics, security headers, and vulnerability testing
+
+### 📝 Templates
+- **E-commerce Template** (`test-scenarios/templates/ecommerce-template.md`) - Comprehensive e-commerce testing including cart, checkout, and payments
+
+### Usage Examples
+
+```bash
+# Basic navigation testing
+web-eval --url https://example.com --instructions test-scenarios/basic/navigation-test.md
+
+# Accessibility audit with multiple agents
+web-eval --url https://example.com --instructions test-scenarios/intermediate/accessibility-audit.md --agents 5
+
+# Comprehensive e-commerce testing
+web-eval --url https://shop.example.com --instructions test-scenarios/templates/ecommerce-template.md --agents 3 --timeout 180
+```
+
 ## 🚀 CI/CD Integration
 
 ### GitHub Actions Example
