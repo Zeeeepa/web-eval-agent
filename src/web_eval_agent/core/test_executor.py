@@ -1,7 +1,7 @@
 """
 Test executor for Web Eval Agent
 
-Executes test scenarios using browser automation and AI-powered interaction.
+Executes test scenarios using multi-agent browser automation and AI-powered interaction.
 """
 
 import asyncio
@@ -10,20 +10,21 @@ import logging
 import time
 import traceback
 import warnings
+import uuid
 from dataclasses import dataclass, field
 from typing import Dict, Any, List, Optional
 from collections import deque
 from datetime import datetime
 
 # Browser automation imports
-from playwright.async_api import async_playwright, Error as PlaywrightError
-from browser_use.agent.service import Agent
-from browser_use.browser.browser import Browser, BrowserConfig
+from browser_use import Agent, Browser, BrowserConfig
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain.globals import set_verbose
+from langchain.schema import HumanMessage
 
 from .config import Config
 from .instruction_parser import TestScenario
+from .scout_agent import ScoutAgent
+from .session_manager import SessionManager
 from ..utils.utils import format_duration, truncate_text
 
 
@@ -52,66 +53,280 @@ class TestResults:
 
 
 class TestExecutor:
-    """Executes web application tests using AI-powered browser automation."""
+    """Executes web application tests using multi-agent browser automation."""
     
     def __init__(self, config: Config):
         self.config = config
         self.logger = logging.getLogger(__name__)
         
-        # Storage for logs and network data
-        self.console_log_storage = deque(maxlen=1000)
-        self.network_request_storage = deque(maxlen=1000)
-        self.timeline_events = deque(maxlen=2000)  # Store all events with timestamps
-        self.test_start_time = None
+        # Multi-agent components
+        self.session_manager = SessionManager(config)
+        self.scout_agent = ScoutAgent(config) if config.scout_mode else None
+        self.llm = ChatGoogleGenerativeAI(
+            model="gemini-2.0-flash",
+            temperature=0.9,
+            google_api_key=config.api_key
+        )
         
-        # Browser instances
-        self.playwright = None
-        self.playwright_browser = None
-        self.agent_browser = None
-        self.agent_instance = None
+        # Storage for test results
+        self._test_results = {}
+        self.test_start_time = None
     
     async def run_tests(self, scenarios: List[TestScenario]) -> TestResults:
-        """Run all test scenarios and return results."""
+        """Run all test scenarios using multi-agent parallel execution."""
         start_time = time.time()
-        test_results = []
-        errors = []
+        self.test_start_time = start_time
+        
+        print(f"🚀 Starting multi-agent web evaluation for {self.config.url}")
+        print(f"🤖 Using {self.config.num_agents} agents in {'headless' if self.config.headless else 'GUI'} mode")
         
         try:
-            await self._setup_browser()
+            # Step 1: Scout the page if enabled
+            if self.scout_agent:
+                print("🔍 Scouting page for interactive elements...")
+                qa_tasks = await self.scout_agent.scout_page(self.config.url)
+                print(f"📝 Found {len(qa_tasks)} targeted test tasks")
+            else:
+                # Use scenarios directly
+                qa_tasks = [scenario.description for scenario in scenarios]
+                print(f"📝 Using {len(qa_tasks)} instruction-based tasks")
             
-            for i, scenario in enumerate(scenarios, 1):
-                print(f"🧪 Running test {i}/{len(scenarios)}: {scenario.name}")
-                
-                try:
-                    result = await self._run_single_test(scenario)
-                    test_results.append(result)
-                    
-                    status = "✅ PASSED" if result.passed else "❌ FAILED"
-                    duration_str = format_duration(result.duration)
-                    print(f"   {status} ({duration_str})")
-                    
-                    if result.error_message:
-                        print(f"   Error: {result.error_message}")
-                        
-                except Exception as e:
-                    error_msg = f"Test execution failed for '{scenario.name}': {str(e)}"
-                    errors.append(error_msg)
-                    self.logger.error(error_msg, exc_info=True)
-                    
-                    # Create a failed test result
-                    result = TestResult(
-                        scenario_name=scenario.name,
-                        passed=False,
-                        duration=0.0,
-                        error_message=str(e)
-                    )
-                    test_results.append(result)
-                    print(f"   ❌ ERROR: {str(e)}")
-        
+            # Step 2: Run multi-agent pool
+            test_id = await self._run_agent_pool(qa_tasks)
+            
+            # Step 3: Generate comprehensive results
+            results = await self._generate_test_results(test_id, scenarios)
+            
+            return results
+            
+        except Exception as e:
+            self.logger.error(f"Multi-agent test execution failed: {e}", exc_info=True)
+            return TestResults(
+                test_results=[],
+                total_duration=time.time() - start_time,
+                errors=[f"Multi-agent execution failed: {str(e)}"]
+            )
         finally:
-            await self._cleanup_browser()
+            # Cleanup all sessions
+            await self.session_manager.close_all_sessions()
+    
+    async def _run_agent_pool(self, qa_tasks: List[str]) -> str:
+        """Run multiple agents in parallel to test different aspects of the site."""
+        test_id = str(uuid.uuid4())
+        start_time = time.time()
         
-        total_duration = time.time() - start_time
+        print(f"🏊 Running agent pool with {self.config.num_agents} agents...")
+        
+        # Run agents in parallel with semaphore limiting
+        async def run_single_agent(agent_id: int):
+            task_description = qa_tasks[agent_id % len(qa_tasks)]
+            session = None
+            
+            try:
+                # Create browser session with timeout
+                session = await asyncio.wait_for(
+                    self.session_manager.create_session(agent_id),
+                    timeout=30.0
+                )
+                
+                # Enhanced task description with better error handling instructions
+                enhanced_task = f"""
+                Navigate to {self.config.url} and {task_description}
+                
+                IMPORTANT INSTRUCTIONS:
+                - If the page fails to load, report the specific error
+                - If elements are not found, describe what you can see instead
+                - If any action fails, explain what happened and what you observed
+                - Focus on functional testing, not subjective opinions
+                - Report specific technical issues like broken links, form errors, or JavaScript errors
+                """
+                
+                # Create and run agent with timeout
+                agent = Agent(
+                    task=enhanced_task,
+                    llm=self.llm,
+                    browser=session.browser,
+                    use_vision=True
+                )
+                
+                print(f"🤖 Agent {agent_id}: {task_description[:60]}...")
+                
+                # Run agent with timeout
+                history = await asyncio.wait_for(
+                    agent.run(),
+                    timeout=self.config.timeout
+                )
+                
+                # Extract result with better error handling
+                if hasattr(history, 'final_result') and callable(history.final_result):
+                    result_text = str(history.final_result())
+                elif hasattr(history, 'result'):
+                    result_text = str(history.result)
+                else:
+                    result_text = str(history)
+                
+                # Check if the result indicates an API failure
+                if not result_text or result_text.strip() in ['None', '', 'null']:
+                    # This likely means the agent failed to execute properly
+                    return {
+                        "agent_id": agent_id,
+                        "task": task_description,
+                        "error": f"Agent {agent_id} failed to produce results - likely due to API issues",
+                        "timestamp": time.time(),
+                        "status": "error"
+                    }
+                
+                # Check if result contains API error indicators
+                if any(indicator in result_text.lower() for indicator in ['api key not valid', 'api_key_invalid', 'invalid argument provided to gemini']):
+                    return {
+                        "agent_id": agent_id,
+                        "task": task_description,
+                        "error": f"Agent {agent_id} failed due to API issues: {result_text[:100]}...",
+                        "timestamp": time.time(),
+                        "status": "error"
+                    }
+                
+                return {
+                    "agent_id": agent_id,
+                    "task": task_description,
+                    "result": result_text,
+                    "timestamp": time.time(),
+                    "status": "success",
+                    "duration": time.time() - start_time
+                }
+                
+            except asyncio.TimeoutError:
+                error_msg = f"Agent {agent_id} timed out after {self.config.timeout}s"
+                print(f"⏰ {error_msg}")
+                return {
+                    "agent_id": agent_id,
+                    "task": task_description,
+                    "error": error_msg,
+                    "timestamp": time.time(),
+                    "status": "timeout"
+                }
+                
+            except Exception as e:
+                error_msg = f"Agent {agent_id} failed: {str(e)}"
+                print(f"❌ {error_msg}")
+                return {
+                    "agent_id": agent_id,
+                    "task": task_description,
+                    "error": error_msg,
+                    "timestamp": time.time(),
+                    "status": "error"
+                }
+                
+            finally:
+                # Ensure session cleanup
+                if session:
+                    try:
+                        await self.session_manager.close_session(agent_id)
+                    except Exception as cleanup_error:
+                        print(f"⚠️ Failed to cleanup session {agent_id}: {cleanup_error}")
+        
+        # Execute agents with semaphore control
+        results = await asyncio.gather(
+            *[self.session_manager.run_with_semaphore(run_single_agent(i)) 
+              for i in range(self.config.num_agents)], 
+            return_exceptions=True
+        )
+        
+        end_time = time.time()
+        
+        # Store results
+        test_data = {
+            "test_id": test_id,
+            "url": self.config.url,
+            "agents": self.config.num_agents,
+            "start_time": start_time,
+            "end_time": end_time,
+            "duration": end_time - start_time,
+            "results": [r for r in results if not isinstance(r, Exception)],
+            "status": "completed"
+        }
+        
+        self._test_results[test_id] = test_data
+        
+        print(f"✅ Agent pool completed in {format_duration(end_time - start_time)}")
+        
+        return test_id
+    
+    async def _generate_test_results(self, test_id: str, original_scenarios: List[TestScenario]) -> TestResults:
+        """Generate comprehensive test results with AI analysis."""
+        if test_id not in self._test_results:
+            return TestResults(
+                test_results=[],
+                total_duration=0.0,
+                errors=[f"Test ID {test_id} not found"]
+            )
+        
+        test_data = self._test_results[test_id]
+        
+        # Separate successful results and errors
+        agent_results = []
+        bug_reports = []
+        errors = []
+        
+        for result in test_data["results"]:
+            if isinstance(result, Exception):
+                errors.append(f"Agent execution exception: {str(result)}")
+                continue
+                
+            if result.get("status") == "success":
+                agent_results.append(result)
+                if "result" in result and result["result"]:
+                    bug_reports.append({
+                        "agent_id": result["agent_id"],
+                        "task": result["task"],
+                        "findings": result["result"],
+                        "timestamp": result["timestamp"]
+                    })
+            elif result.get("status") in ["error", "timeout"]:
+                error_msg = result.get('error', 'Unknown error')
+                errors.append(f"Agent {result['agent_id']}: {error_msg}")
+            else:
+                # Handle unexpected result format
+                errors.append(f"Agent {result.get('agent_id', 'unknown')}: Unexpected result format")
+        
+
+        # Generate AI-powered analysis
+        analysis_result = await self._analyze_findings(bug_reports, test_data["url"])
+        
+        # Create test results
+        test_results = []
+        
+        # If we have agent errors but no successful results, all tests should fail
+        has_global_agent_failures = len(errors) > 0 and len(bug_reports) == 0
+        
+        # Create a result for each original scenario
+        for i, scenario in enumerate(original_scenarios):
+            # Find corresponding agent results
+            scenario_findings = []
+            
+            # Check if we have any successful agent results for this scenario
+            if i < len(bug_reports):
+                scenario_findings.append(bug_reports[i]["findings"])
+            
+            # If there are global agent failures, all tests should fail
+            if has_global_agent_failures:
+                passed = False
+                error_message = f"Agent execution failed: {errors[0] if errors else 'All agents failed to execute'}"
+            else:
+                # Determine if test passed based on analysis
+                passed = self._determine_test_status(analysis_result, scenario_findings)
+                error_message = None if passed else "Issues found during testing"
+            
+            test_result = TestResult(
+                scenario_name=scenario.name,
+                passed=passed,
+                duration=test_data["duration"] / len(original_scenarios),  # Distribute duration
+                error_message=error_message,
+                agent_steps=scenario_findings,
+                validation_results=[analysis_result] if analysis_result else []
+            )
+            
+            test_results.append(test_result)
         
         # Generate summary
         passed_count = sum(1 for r in test_results if r.passed)
@@ -122,413 +337,180 @@ class TestExecutor:
             "passed": passed_count,
             "failed": failed_count,
             "success_rate": (passed_count / len(test_results) * 100) if test_results else 0,
-            "total_duration": total_duration
+            "total_duration": test_data["duration"],
+            "agents_used": test_data["agents"],
+            "analysis": analysis_result
         }
         
         return TestResults(
             test_results=test_results,
-            total_duration=total_duration,
+            total_duration=test_data["duration"],
             errors=errors,
             summary=summary
         )
     
-    async def _setup_browser(self):
-        """Initialize browser and agent."""
-        try:
-            # Configure logging suppression
-            logging.basicConfig(level=logging.CRITICAL)
-            for logger_name in ["browser_use", "root", "agent", "browser"]:
-                current_logger = logging.getLogger(logger_name)
-                current_logger.setLevel(logging.CRITICAL)
-            
-            warnings.filterwarnings("ignore", category=UserWarning)
-            set_verbose(False)
-            
-            # Initialize Playwright
-            self.playwright = await async_playwright().start()
-            
-            # Launch browser
-            browser_args = ["--remote-debugging-port=9222"]
-            if not self.config.headless:
-                browser_args.extend([
-                    "--disable-web-security",
-                    "--disable-features=VizDisplayCompositor"
-                ])
-            
-            self.playwright_browser = await self.playwright.chromium.launch(
-                headless=self.config.headless,
-                args=browser_args
-            )
-            
-            # Create browser-use Browser
-            browser_config = BrowserConfig(
-                disable_security=True,
-                headless=self.config.headless,
-                cdp_url="http://127.0.0.1:9222"
-            )
-            
-            self.agent_browser = Browser(config=browser_config)
-            self.agent_browser.playwright = self.playwright
-            self.agent_browser.playwright_browser = self.playwright_browser
-            
-            self.logger.info("Browser setup completed successfully")
-            
-        except Exception as e:
-            self.logger.error(f"Failed to setup browser: {e}")
-            raise
-    
-    async def _cleanup_browser(self):
-        """Clean up browser resources."""
-        try:
-            if self.agent_browser:
-                await self.agent_browser.close()
-            if self.playwright_browser:
-                await self.playwright_browser.close()
-            if self.playwright:
-                await self.playwright.stop()
-        except Exception as e:
-            self.logger.error(f"Error during browser cleanup: {e}")
-    
-    def _add_timeline_event(self, event_type: str, description: str, details: str = ""):
-        """Add an event to the chronological timeline."""
-        if self.test_start_time is None:
-            return
-            
-        current_time = datetime.now()
-        elapsed_ms = int((current_time.timestamp() - self.test_start_time) * 1000)
-        
-        # Format timestamp as HH:MM:SS.mmm
-        timestamp = current_time.strftime("%H:%M:%S") + f".{elapsed_ms % 1000:03d}"
-        
-        event = {
-            "timestamp": timestamp,
-            "type": event_type,
-            "description": description,
-            "details": details,
-            "elapsed_ms": elapsed_ms
-        }
-        
-        self.timeline_events.append(event)
-
-    async def _run_single_test(self, scenario: TestScenario) -> TestResult:
-        """Run a single test scenario."""
-        start_time = time.time()
-        self.test_start_time = start_time
-        
-        # Clear storage for this test
-        self.console_log_storage.clear()
-        self.network_request_storage.clear()
-        self.timeline_events.clear()
-        
-        try:
-            # Create context and page
-            context = await self.playwright_browser.new_context(
-                viewport={"width": self.config.viewport_size[0], "height": self.config.viewport_size[1]}
-            )
-            page = await context.new_page()
-            
-            # Set up event listeners
-            await self._setup_page_listeners(page)
-            
-            # Navigate to the URL
-            await page.goto(self.config.url, wait_until="networkidle", timeout=30000)
-            
-            # Create the task description for the AI agent
-            task_description = self._create_task_description(scenario)
-            
-            # Initialize the AI agent
-            llm = ChatGoogleGenerativeAI(
-                model="gemini-1.5-flash",
-                api_key=self.config.api_key,
-                temperature=0.1
-            )
-            
-            self.agent_instance = Agent(
-                task=task_description,
-                llm=llm,
-                browser=self.agent_browser
-            )
-            
-            # Run the agent task
-            agent_result = await self.agent_instance.run()
-            
-            # Screenshot functionality removed - focusing on comprehensive text reporting
-            
-            # Validate results
-            validation_results = await self._validate_scenario(scenario, page)
-            
-            # Determine if test passed
-            passed = all(v.get("passed", False) for v in validation_results)
-            
-            duration = time.time() - start_time
-            
-            # Add final timeline events
-            self._add_timeline_event("agent", "🤖 🏁 Flow finished – evaluation completed", "")
-            
-            return TestResult(
-                scenario_name=scenario.name,
-                passed=passed,
-                duration=duration,
-                screenshots=[],  # Screenshots removed - comprehensive text reporting only
-                console_logs=list(self.console_log_storage),
-                network_requests=list(self.network_request_storage),
-                agent_steps=self._extract_agent_steps(agent_result),
-                validation_results=validation_results,
-                timeline_events=list(self.timeline_events)
-            )
-            
-        except Exception as e:
-            duration = time.time() - start_time
-            error_msg = f"Test execution failed: {str(e)}"
-            
-            return TestResult(
-                scenario_name=scenario.name,
-                passed=False,
-                duration=duration,
-                error_message=error_msg,
-                screenshots=[],  # Screenshots removed - comprehensive text reporting only
-                console_logs=list(self.console_log_storage),
-                network_requests=list(self.network_request_storage),
-                timeline_events=list(self.timeline_events)
-            )
-    
-    def _create_task_description(self, scenario: TestScenario) -> str:
-        """Create a comprehensive task description for the AI agent."""
-        task_parts = [
-            f"Task: {scenario.description}",
-            "",
-            "Steps to follow:"
-        ]
-        
-        for i, step in enumerate(scenario.steps, 1):
-            task_parts.append(f"{i}. {step}")
-        
-        task_parts.extend([
-            "",
-            "Validation criteria:"
-        ])
-        
-        for validation in scenario.validations:
-            task_parts.append(f"- {validation}")
-        
-        task_parts.extend([
-            "",
-            "Expected outcomes:"
-        ])
-        
-        for outcome in scenario.expected_outcomes:
-            task_parts.append(f"- {outcome}")
-        
-        task_parts.extend([
-            "",
-            "Please execute these steps carefully and report any issues you encounter.",
-            "Take screenshots at key points and note any errors or unexpected behavior."
-        ])
-        
-        return "\n".join(task_parts)
-    
-    async def _setup_page_listeners(self, page):
-        """Set up event listeners for console logs and network requests."""
-        
-        async def handle_console(message):
-            """Handle console messages."""
-            try:
-                log_entry = {
-                    "type": message.type,
-                    "text": message.text,
-                    "location": message.location,
-                    "timestamp": time.time()
+    async def _analyze_findings(self, bug_reports: List[Dict], url: str) -> Dict[str, Any]:
+        """Use AI to analyze findings and classify severity."""
+        if not bug_reports:
+            return {
+                "overall_status": "passing",
+                "status_emoji": "✅",
+                "status_description": "No issues detected during testing",
+                "total_issues": 0,
+                "severity_breakdown": {
+                    "high_severity": [],
+                    "medium_severity": [],
+                    "low_severity": []
                 }
-                self.console_log_storage.append(log_entry)
-                
-                # Add to timeline
-                self._add_timeline_event(
-                    "console", 
-                    f"🖥️ Console [{message.type}] {message.text[:50]}{'...' if len(message.text) > 50 else ''}",
-                    message.text
-                )
-            except Exception as e:
-                self.logger.error(f"Error handling console message: {e}")
+            }
         
-        async def handle_request(request):
-            """Handle network requests."""
-            try:
-                if self._should_log_network_request(request):
-                    request_entry = {
-                        "id": id(request),
-                        "method": request.method,
-                        "url": request.url,
-                        "headers": await request.all_headers(),
-                        "timestamp": time.time()
-                    }
-                    self.network_request_storage.append(request_entry)
-                    
-                    # Add to timeline
-                    url_path = request.url.split('/')[-1] if '/' in request.url else request.url
-                    self._add_timeline_event(
-                        "network_request",
-                        f"➡️ {request.method} {url_path}",
-                        request.url
-                    )
-            except Exception as e:
-                self.logger.error(f"Error handling request: {e}")
-        
-        async def handle_response(response):
-            """Handle network responses."""
-            try:
-                # Update the corresponding request with response data
-                for req in self.network_request_storage:
-                    if req.get("id") == id(response.request):
-                        req["response_status"] = response.status
-                        req["response_headers"] = await response.all_headers()
-                        
-                        # Add response to timeline
-                        url_path = response.url.split('/')[-1] if '/' in response.url else response.url
-                        self._add_timeline_event(
-                            "network_response",
-                            f"⬅️ {response.status} {url_path}",
-                            f"{response.status} {response.url}"
-                        )
-                        break
-            except Exception as e:
-                self.logger.error(f"Error handling response: {e}")
-        
-        # Set up event listeners
-        page.on("console", handle_console)
-        page.on("request", handle_request)
-        page.on("response", handle_response)
-    
-    def _should_log_network_request(self, request) -> bool:
-        """Determine if a network request should be logged."""
-        url = request.url
-        
-        # Skip node_modules
-        if "/node_modules/" in url:
-            return False
-        
-        # Only log XHR and fetch requests
-        if request.resource_type not in ["xhr", "fetch"]:
-            return False
-        
-        # Skip common static file types
-        extensions_to_filter = [
-            ".js", ".css", ".woff", ".woff2", ".ttf", ".eot",
-            ".svg", ".png", ".jpg", ".jpeg", ".gif", ".ico", ".map"
-        ]
-        
-        for ext in extensions_to_filter:
-            if url.endswith(ext) or f"{ext}?" in url:
-                return False
-        
-        return True
-    
-    async def _validate_scenario(self, scenario: TestScenario, page) -> List[Dict]:
-        """Validate the scenario results."""
-        validation_results = []
-        
-        for validation in scenario.validations:
-            try:
-                # Basic validation - check for console errors
-                if "console error" in validation.lower() or "error" in validation.lower():
-                    error_logs = [log for log in self.console_log_storage if log.get("type") == "error"]
-                    passed = len(error_logs) == 0
-                    validation_results.append({
-                        "validation": validation,
-                        "passed": passed,
-                        "details": f"Found {len(error_logs)} console errors" if not passed else "No console errors found"
-                    })
-                
-                # URL validation
-                elif "url" in validation.lower():
-                    current_url = page.url
-                    passed = self.config.url in current_url
-                    validation_results.append({
-                        "validation": validation,
-                        "passed": passed,
-                        "details": f"Current URL: {current_url}"
-                    })
-                
-                # Generic validation - assume passed for now
-                else:
-                    validation_results.append({
-                        "validation": validation,
-                        "passed": True,
-                        "details": "Manual validation required"
-                    })
-                    
-            except Exception as e:
-                validation_results.append({
-                    "validation": validation,
-                    "passed": False,
-                    "details": f"Validation error: {str(e)}"
-                })
-        
-        return validation_results
-    
-    def _extract_agent_steps(self, agent_result) -> List[str]:
-        """Extract detailed agent steps with emojis for comprehensive reporting."""
-        steps = []
+        # Prepare findings text
+        bug_reports_text = "\n\n".join([
+            f"Agent {report['agent_id']} Report:\nTask: {report['task']}\nFindings: {report['findings']}"
+            for report in bug_reports
+        ])
         
         try:
-            # Extract actions and thoughts from browser-use AgentHistoryList
-            model_actions = agent_result.model_actions() if hasattr(agent_result, 'model_actions') else []
-            model_thoughts = agent_result.model_thoughts() if hasattr(agent_result, 'model_thoughts') else []
-            action_names = agent_result.action_names() if hasattr(agent_result, 'action_names') else []
+            prompt = f"""
+You are an objective QA analyst. Review the following test reports from agents that explored the website {url}.
+
+Identify only actual functional issues, broken features, or technical problems. Do NOT classify subjective opinions, missing features that may be intentional, or design preferences as issues.
+
+Only report issues if they represent:
+- Broken functionality (buttons that don't work, forms that fail)
+- Technical errors (404s, JavaScript errors, broken links)
+- Accessibility violations (missing alt text, poor contrast)
+- Performance problems (very slow loading, timeouts)
+
+For each issue you identify, provide SPECIFIC and DETAILED descriptions including:
+- The exact element that was tested (button name, link text, form field, etc.)
+- The specific action taken (clicked, typed, submitted, etc.)
+- The exact result or error observed (404 error, no response, broken redirect, etc.)
+- Any relevant context from the agent's testing
+
+Here are the test reports: {bug_reports_text}
+
+Format the output as JSON with the following structure:
+{{
+  "high_severity": [
+    {{"category": "category_name", "description": "specific detailed description with exact steps and results"}},
+    ...
+  ],
+  "medium_severity": [
+    {{"category": "category_name", "description": "specific detailed description with exact steps and results"}},
+    ...
+  ],
+  "low_severity": [
+    {{"category": "category_name", "description": "specific detailed description with exact steps and results"}},
+    ...
+  ]
+}}
+
+Only include real issues found during testing. Provide clear, concise descriptions. Deduplicate similar issues.
+"""
+
+            response = await self.llm.ainvoke([HumanMessage(content=prompt)])
             
-            # Extract detailed actions with proper formatting and emojis
-            if model_actions:
-                for i, action in enumerate(model_actions):
-                    action_str = str(action).strip()
-                    
-                    # Determine action type and add appropriate emoji
-                    if 'navigate' in action_str.lower() or 'goto' in action_str.lower():
-                        emoji = "📍"
-                        action_type = "Navigate"
-                    elif 'click' in action_str.lower():
-                        emoji = "📍"
-                        action_type = "Click"
-                    elif 'type' in action_str.lower() or 'input' in action_str.lower():
-                        emoji = "📍"
-                        action_type = "Type"
-                    elif 'scroll' in action_str.lower():
-                        emoji = "📍"
-                        action_type = "Scroll"
-                    elif 'wait' in action_str.lower():
-                        emoji = "📍"
-                        action_type = "Wait"
-                    else:
-                        emoji = "📍"
-                        action_type = "Action"
-                    
-                    # Format step with emoji and action details
-                    step_info = f"{emoji} {i+1}. {action_type} → {action_str}"
-                    steps.append(step_info)
+            # Parse JSON response
+            import re
+            json_match = re.search(r'\{.*\}', response.content, re.DOTALL)
+            if json_match:
+                severity_analysis = json.loads(json_match.group())
+            else:
+                severity_analysis = {
+                    "high_severity": [],
+                    "medium_severity": [],
+                    "low_severity": []
+                }
             
-            # Fallback to action names if detailed actions not available
-            elif action_names:
-                for i, action_name in enumerate(action_names):
-                    steps.append(f"📍 {i+1}. Action → {action_name}")
+            total_issues = (
+                len(severity_analysis.get("high_severity", [])) +
+                len(severity_analysis.get("medium_severity", [])) +
+                len(severity_analysis.get("low_severity", []))
+            )
             
-            # Add completion status
-            if hasattr(agent_result, 'is_successful'):
-                is_successful = agent_result.is_successful()
-                if is_successful:
-                    steps.append("🏁 Flow tested successfully – UX felt smooth and intuitive.")
-                else:
-                    steps.append("❌ Flow completed with issues detected.")
+            # Determine overall status
+            if len(severity_analysis.get("high_severity", [])) > 0:
+                overall_status = "high-severity"
+                status_emoji = "🔴"
+                status_description = "Critical issues found that need immediate attention"
+            elif len(severity_analysis.get("medium_severity", [])) > 0:
+                overall_status = "medium-severity"
+                status_emoji = "🟠"
+                status_description = "Moderate issues found that should be addressed"
+            elif len(severity_analysis.get("low_severity", [])) > 0:
+                overall_status = "low-severity"
+                status_emoji = "🟡"
+                status_description = "Minor issues found that could be improved"
+            else:
+                overall_status = "passing"
+                status_emoji = "✅"
+                status_description = "No technical issues detected during testing"
             
-            # Extract final result if available
-            if hasattr(agent_result, 'final_result'):
-                final_result = agent_result.final_result()
-                if final_result and str(final_result).strip():
-                    steps.append(f"📋 Result: {final_result}")
-                
+            return {
+                "overall_status": overall_status,
+                "status_emoji": status_emoji,
+                "status_description": status_description,
+                "total_issues": total_issues,
+                "severity_breakdown": severity_analysis,
+                "llm_analysis": {
+                    "raw_response": response.content,
+                    "model_used": "gemini-2.0-flash"
+                }
+            }
+            
         except Exception as e:
-            steps.append(f"❌ Error extracting agent steps: {str(e)}")
+            print(f"⚠️ AI analysis failed: {e}")
+            # Fallback analysis with better error handling
+            if "API key not valid" in str(e) or "API_KEY_INVALID" in str(e):
+                status_description = "AI analysis unavailable (API key required). Manual review recommended."
+                analysis_error = "Invalid API key - please set a valid GEMINI_API_KEY"
+            elif "quota" in str(e).lower() or "limit" in str(e).lower():
+                status_description = "AI analysis unavailable (API quota exceeded). Manual review recommended."
+                analysis_error = "API quota exceeded"
+            else:
+                status_description = f"AI analysis failed. Manual review recommended. Error: {str(e)[:100]}"
+                analysis_error = str(e)
+            
+            return {
+                "overall_status": "low-severity" if bug_reports else "passing",
+                "status_emoji": "🟡" if bug_reports else "✅",
+                "status_description": status_description,
+                "total_issues": len(bug_reports),
+                "severity_breakdown": {
+                    "high_severity": [],
+                    "medium_severity": [],
+                    "low_severity": [{"category": "general", "description": f"Found {len(bug_reports)} potential issues requiring manual review"}] if bug_reports else []
+                },
+                "llm_analysis_error": analysis_error,
+                "fallback_analysis": True
+            }
+    
+    def _determine_test_status(self, analysis_result: Dict[str, Any], findings: List[str]) -> bool:
+        """Determine if a test passed based on analysis results."""
+        # If no analysis result and no findings, it means agents failed to execute
+        if not analysis_result and len(findings) == 0:
+            return False  # This is a failure, not a pass
         
-        # If no steps found, add a generic completion step
-        if not steps:
-            steps.append("📍 1. Navigate → Target URL")
-            steps.append("🏁 Flow completed successfully.")
+        # If we have analysis results, use them
+        if analysis_result:
+            # Check if analysis failed due to API issues
+            if analysis_result.get("fallback_analysis", False):
+                # If we have findings despite API failure, consider it a partial success
+                return len(findings) > 0
+            
+            # Test fails if there are high severity issues
+            high_severity_count = len(analysis_result.get("severity_breakdown", {}).get("high_severity", []))
+            if high_severity_count > 0:
+                return False
+            
+            # Test passes if no issues or only low severity issues
+            overall_status = analysis_result.get("overall_status", "passing")
+            return overall_status in ["passing", "low-severity"]
         
-        return steps
+        # Fallback: if we have findings but no analysis, consider it a partial success
+        return len(findings) > 0
+    
+    def get_test_results(self, test_id: str) -> Optional[Dict[str, Any]]:
+        """Get stored test results by ID."""
+        return self._test_results.get(test_id)
