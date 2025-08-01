@@ -10,8 +10,7 @@ import re
 from typing import List, Dict, Any
 from dataclasses import dataclass
 
-from browser_use import Agent
-from browser_use.browser import Browser, BrowserConfig
+from browser_use import Agent, Browser, BrowserConfig
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.schema import HumanMessage
 
@@ -48,11 +47,7 @@ class ScoutAgent:
                 headless=True,
                 disable_security=True,
                 chrome_instance_path=None,
-                chrome_user_data_dir=None,
-                additional_args=['--disable-gpu', '--no-sandbox', '--disable-dev-shm-usage'],
-                wait_for_network_idle_page_load_time=2.0,
-                maximum_wait_page_load_time=8.0,
-                wait_between_actions=0.5
+                extra_chromium_args=['--disable-gpu', '--no-sandbox', '--disable-dev-shm-usage']
             )
             
             browser = Browser(config=browser_config)

@@ -17,8 +17,7 @@ from collections import deque
 from datetime import datetime
 
 # Browser automation imports
-from browser_use import Agent
-from browser_use.browser import Browser, BrowserConfig
+from browser_use import Agent, Browser, BrowserConfig
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.schema import HumanMessage
 
@@ -413,5 +412,3 @@ Only include real issues found during testing. Provide clear, concise descriptio
     def get_test_results(self, test_id: str) -> Optional[Dict[str, Any]]:
         """Get stored test results by ID."""
         return self._test_results.get(test_id)
-
-

@@ -10,7 +10,7 @@ import subprocess
 from typing import List, Dict, Any, Optional, Tuple
 from dataclasses import dataclass
 
-from browser_use.browser import Browser, BrowserConfig
+from browser_use import Browser, BrowserConfig
 
 from .config import Config
 
@@ -98,13 +98,7 @@ class SessionManager:
             headless=self.config.headless,
             disable_security=True,
             chrome_instance_path=None,
-            chrome_user_data_dir=None,
-            additional_args=browser_args,
-            ignore_default_args=['--enable-automation'],
-            wait_for_network_idle_page_load_time=2.0,
-            maximum_wait_page_load_time=8.0,
-            wait_between_actions=0.5,
-            **window_config
+            extra_chromium_args=browser_args
         )
         
         # Create browser instance
