@@ -24,13 +24,13 @@ def check_api_key():
 async def run_basic_test():
     """Run basic functionality test"""
     print("🧪 Running basic functionality test...")
-    from simple_test import test_basic_functionality
+    from unit.simple_test import test_basic_functionality
     await test_basic_functionality()
 
 async def run_ssh_demo():
     """Run SSH search demonstration"""
     print("🔍 Running SSH search demonstration...")
-    from test_ssh_demo import test_ssh_demo
+    from integration.test_ssh_demo import test_ssh_demo
     await test_ssh_demo()
 
 async def run_local_webapp_test(url=None):
@@ -39,11 +39,11 @@ async def run_local_webapp_test(url=None):
     
     if url:
         # Override the URL in the test
-        import test_local_webapp
+        import examples.test_local_webapp
         # Modify the test to use the provided URL
         print(f"Testing URL: {url}")
     
-    from test_local_webapp import test_local_webapp_interactions
+    from examples.test_local_webapp import test_local_webapp_interactions
     await test_local_webapp_interactions()
 
 def main():
@@ -87,4 +87,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

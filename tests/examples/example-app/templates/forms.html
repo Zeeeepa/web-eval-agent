@@ -1,0 +1,282 @@
+{% extends "base.html" %}
+
+{% block title %}Forms - Web Eval Test App{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h3 class="mb-0">
+                    <i class="fas fa-edit"></i> Contact Form Testing
+                </h3>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">
+                    Test form validation, submission, and error handling with this contact form.
+                </p>
+                
+                <form method="POST" action="{{ url_for('contact') }}" id="contact-form">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="name" class="form-label">
+                                    Full Name <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control" id="name" name="name" 
+                                       value="{{ name or '' }}" placeholder="Enter your full name" required>
+                                <div class="invalid-feedback">
+                                    Please provide a valid name.
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="email" class="form-label">
+                                    Email Address <span class="text-danger">*</span>
+                                </label>
+                                <input type="email" class="form-control" id="email" name="email" 
+                                       value="{{ email or '' }}" placeholder="your.email@example.com" required>
+                                <div class="invalid-feedback">
+                                    Please provide a valid email address.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="subject" class="form-label">
+                            Subject <span class="text-danger">*</span>
+                        </label>
+                        <select class="form-select" id="subject" name="subject" required>
+                            <option value="">Choose a subject...</option>
+                            <option value="General Inquiry" {{ 'selected' if subject == 'General Inquiry' }}>General Inquiry</option>
+                            <option value="Technical Support" {{ 'selected' if subject == 'Technical Support' }}>Technical Support</option>
+                            <option value="Bug Report" {{ 'selected' if subject == 'Bug Report' }}>Bug Report</option>
+                            <option value="Feature Request" {{ 'selected' if subject == 'Feature Request' }}>Feature Request</option>
+                            <option value="Other" {{ 'selected' if subject == 'Other' }}>Other</option>
+                        </select>
+                        <div class="invalid-feedback">
+                            Please select a subject.
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="message" class="form-label">
+                            Message <span class="text-danger">*</span>
+                        </label>
+                        <textarea class="form-control" id="message" name="message" rows="5" 
+                                  placeholder="Enter your message here..." required>{{ message or '' }}</textarea>
+                        <div class="invalid-feedback">
+                            Please provide a message.
+                        </div>
+                        <div class="form-text">
+                            <span id="char-count">0</span> / 1000 characters
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="newsletter" name="newsletter" value="yes">
+                            <label class="form-check-label" for="newsletter">
+                                Subscribe to our newsletter for updates
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="terms" name="terms" value="yes" required>
+                            <label class="form-check-label" for="terms">
+                                I agree to the <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">Terms and Conditions</a> <span class="text-danger">*</span>
+                            </label>
+                            <div class="invalid-feedback">
+                                You must agree to the terms and conditions.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="reset" class="btn btn-outline-secondary me-md-2" id="reset-btn">
+                            <i class="fas fa-undo"></i> Reset Form
+                        </button>
+                        <button type="submit" class="btn btn-success" id="submit-btn">
+                            <i class="fas fa-paper-plane"></i> Send Message
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Newsletter Signup -->
+        <div class="card mt-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-envelope"></i> Newsletter Signup
+                </h5>
+            </div>
+            <div class="card-body">
+                <p>Stay updated with our latest news and updates!</p>
+                <form class="row g-3" id="newsletter-form">
+                    <div class="col-md-8">
+                        <input type="email" class="form-control" id="newsletter-email" 
+                               placeholder="Enter your email address" required>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="submit" class="btn btn-info w-100" id="newsletter-btn">
+                            <i class="fas fa-plus"></i> Subscribe
+                        </button>
+                    </div>
+                </form>
+                <div id="newsletter-result" class="mt-2"></div>
+            </div>
+        </div>
+        
+        <!-- Testing Instructions -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle"></i> Form Testing Instructions
+                </h5>
+            </div>
+            <div class="card-body">
+                <h6>Test Scenarios:</h6>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-success">Valid Submission:</h6>
+                        <ul>
+                            <li>Name: "John Doe"</li>
+                            <li>Email: "john.doe@example.com"</li>
+                            <li>Subject: "General Inquiry"</li>
+                            <li>Message: "This is a test message"</li>
+                            <li>Check terms and conditions</li>
+                            <li>Submit form</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-danger">Invalid Submissions:</h6>
+                        <ul>
+                            <li>Empty required fields</li>
+                            <li>Invalid email format</li>
+                            <li>Unchecked terms checkbox</li>
+                            <li>Message too long (>1000 chars)</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="alert alert-info mt-3">
+                    <strong>For web-eval testing:</strong> Try both valid and invalid form submissions 
+                    to test validation, error handling, and success flows.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Terms Modal -->
+<div class="modal fade" id="termsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Terms and Conditions</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>This is a demo application for testing purposes. By using this form, you agree to:</p>
+                <ul>
+                    <li>Provide accurate information</li>
+                    <li>Use the application responsibly</li>
+                    <li>Understand this is for testing only</li>
+                </ul>
+                <p>No real data is stored or processed.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" onclick="acceptTerms()">Accept</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('contact-form');
+        const messageField = document.getElementById('message');
+        const charCount = document.getElementById('char-count');
+        const submitBtn = document.getElementById('submit-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const newsletterForm = document.getElementById('newsletter-form');
+        
+        // Character counter for message field
+        messageField.addEventListener('input', function() {
+            const count = this.value.length;
+            charCount.textContent = count;
+            
+            if (count > 1000) {
+                charCount.parentElement.classList.add('text-danger');
+                this.classList.add('is-invalid');
+            } else {
+                charCount.parentElement.classList.remove('text-danger');
+                this.classList.remove('is-invalid');
+            }
+        });
+        
+        // Form validation
+        form.addEventListener('submit', function(e) {
+            if (!form.checkValidity()) {
+                e.preventDefault();
+                e.stopPropagation();
+            } else {
+                // Add loading state
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+                submitBtn.disabled = true;
+            }
+            form.classList.add('was-validated');
+        });
+        
+        // Reset form
+        resetBtn.addEventListener('click', function() {
+            form.classList.remove('was-validated');
+            charCount.textContent = '0';
+            charCount.parentElement.classList.remove('text-danger');
+        });
+        
+        // Newsletter form
+        newsletterForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = document.getElementById('newsletter-email').value;
+            const result = document.getElementById('newsletter-result');
+            const btn = document.getElementById('newsletter-btn');
+            
+            if (!email || !email.includes('@')) {
+                result.innerHTML = '<div class="alert alert-danger">Please enter a valid email address.</div>';
+                return;
+            }
+            
+            // Simulate subscription
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Subscribing...';
+            btn.disabled = true;
+            
+            setTimeout(() => {
+                result.innerHTML = '<div class="alert alert-success">Successfully subscribed to newsletter!</div>';
+                newsletterForm.reset();
+                btn.innerHTML = '<i class="fas fa-plus"></i> Subscribe';
+                btn.disabled = false;
+            }, 1500);
+        });
+        
+        // Log form interactions for testing
+        console.log('Forms page loaded');
+        console.log('Contact form validation enabled');
+        console.log('Newsletter form ready');
+    });
+    
+    function acceptTerms() {
+        document.getElementById('terms').checked = true;
+        console.log('Terms accepted via modal');
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,346 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Eval Agent - Test Report</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+        }
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+        }
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 30px;
+            background: #f8f9fa;
+        }
+        .summary-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .summary-card h3 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+        .summary-card .value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .success-rate {
+            color: #dc3545;
+        }
+        .content {
+            padding: 30px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+        .passed {
+            background-color: #f8fff8;
+        }
+        .failed {
+            background-color: #fff8f8;
+        }
+        .error-message {
+            color: #dc3545;
+            font-size: 0.9em;
+            margin-top: 5px;
+            padding: 10px;
+            background-color: #f8d7da;
+            border-radius: 4px;
+        }
+        .test-detail {
+            margin-bottom: 40px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .test-detail-header {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-bottom: 1px solid #ddd;
+        }
+        .test-detail-content {
+            padding: 20px;
+        }
+        .validation-item {
+            padding: 8px 12px;
+            margin: 5px 0;
+            border-radius: 4px;
+            border-left: 4px solid;
+        }
+        .validation-passed {
+            background-color: #f8fff8;
+            border-left-color: #28a745;
+        }
+        .validation-failed {
+            background-color: #fff8f8;
+            border-left-color: #dc3545;
+        }
+        .console-log {
+            background: #f8f9fa;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+        .console-error {
+            background: #fff8f8;
+            border-left: 4px solid #dc3545;
+        }
+        .console-warn {
+            background: #fff9f0;
+            border-left: 4px solid #ffc107;
+        }
+        .network-request {
+            background: #f8f9fa;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+        .collapsible {
+            cursor: pointer;
+            padding: 10px;
+            background: #f1f1f1;
+            border: none;
+            text-align: left;
+            outline: none;
+            font-size: 15px;
+            width: 100%;
+        }
+        .collapsible:hover {
+            background-color: #ddd;
+        }
+        .collapsible-content {
+            padding: 0 18px;
+            display: none;
+            overflow: hidden;
+            background-color: #f9f9f9;
+        }
+        .collapsible-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧪 Web Eval Agent Report</h1>
+            <p>Generated on 2025-08-01 00:20:46</p>
+            <p>Testing: http://localhost:5000</p>
+        </div>
+        
+        <div class="summary">
+            <div class="summary-card">
+                <h3>Total Tests</h3>
+                <div class="value">1</div>
+            </div>
+            <div class="summary-card">
+                <h3>Passed</h3>
+                <div class="value" style="color: #28a745;">0</div>
+            </div>
+            <div class="summary-card">
+                <h3>Failed</h3>
+                <div class="value" style="color: #dc3545;">1</div>
+            </div>
+            <div class="summary-card">
+                <h3>Success Rate</h3>
+                <div class="value success-rate">0.0%</div>
+            </div>
+            <div class="summary-card">
+                <h3>Duration</h3>
+                <div class="value">1m 13.4s</div>
+            </div>
+        </div>
+        
+        <div class="content">
+            <h2>Test Results Overview</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Test Name</th>
+                        <th>Duration</th>
+                        <th>Validations</th>
+                        <th>Console Logs</th>
+                        <th>Network Requests</th>
+                        <th>Screenshots</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                <tr class="failed">
+                    <td>❌ Basic Navigation Test</td>
+                    <td>1m 12.7s</td>
+                    <td></td>
+                    <td>29 logs</td>
+                    <td>0 requests</td>
+                    <td>0 screenshots</td>
+                </tr>
+                <div class="error-message">Test execution failed: Page.screenshot: Target page, context or browser has been closed</div>
+            
+                </tbody>
+            </table>
+            
+            <h2>Detailed Test Results</h2>
+            
+        <div class="test-detail">
+            <div class="test-detail-header">
+                <h3>❌ Basic Navigation Test</h3>
+                <p>Duration: 1m 12.7s</p>
+                <p style="color: #dc3545;">Error: Test execution failed: Page.screenshot: Target page, context or browser has been closed</p>
+            </div>
+            <div class="test-detail-content">
+                
+                
+                
+                
+                <button class="collapsible">Console Logs (29)</button><div class="collapsible-content">
+                    <div class="console-log console-log">
+                        [LOG] Web Eval Test App loaded successfully!
+                    </div>
+                
+                    <div class="console-log console-log">
+                        [LOG] Current page: /
+                    </div>
+                
+                    <div class="console-log console-log">
+                        [LOG] User agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/139.0.7258.5 Safari/537.36
+                    </div>
+                
+                    <div class="console-log console-log">
+                        [LOG] Homepage loaded with 6 feature cards
+                    </div>
+                
+                    <div class="console-log console-log">
+                        [LOG] Homepage fully interactive after 1 second
+                    </div>
+                
+                    <div class="console-log console-log">
+                        [LOG] Web Eval Test App loaded successfully!
+                    </div>
+                
+                    <div class="console-log console-log">
+                        [LOG] Current page: /
+                    </div>
+                
+                    <div class="console-log console-log">
+                        [LOG] User agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/139.0.7258.5 Safari/537.36
+                    </div>
+                
+                    <div class="console-log console-log">
+                        [LOG] Homepage loaded with 6 feature cards
+                    </div>
+                
+                    <div class="console-log console-log">
+                        [LOG] Homepage fully interactive after 1 second
+                    </div>
+                
+                    <div class="console-log console-log">
+                        [LOG] Web Eval Test App loaded successfully!
+                    </div>
+                
+                    <div class="console-log console-log">
+                        [LOG] Current page: /counter
+                    </div>
+                
+                    <div class="console-log console-log">
+                        [LOG] User agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/139.0.7258.5 Safari/537.36
+                    </div>
+                
+                    <div class="console-log console-log">
+                        [LOG] Counter page loaded with value: 0
+                    </div>
+                
+                    <div class="console-log console-log">
+                        [LOG] Keyboard shortcuts enabled: +/- for increment/decrement, R for reset
+                    </div>
+                
+                    <div class="console-log console-log">
+                        [LOG] Web Eval Test App loaded successfully!
+                    </div>
+                
+                    <div class="console-log console-log">
+                        [LOG] Current page: /forms
+                    </div>
+                
+                    <div class="console-log console-log">
+                        [LOG] User agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/139.0.7258.5 Safari/537.36
+                    </div>
+                
+                    <div class="console-log console-log">
+                        [LOG] Forms page loaded
+                    </div>
+                
+                    <div class="console-log console-log">
+                        [LOG] Contact form validation enabled
+                    </div>
+                <p><em>... and 9 more logs</em></p></div>
+                
+                
+                
+                
+            </div>
+        </div>
+        
+        </div>
+    </div>
+    
+    <script>
+        // Make collapsible sections work
+        document.querySelectorAll('.collapsible').forEach(button => {
+            button.addEventListener('click', function() {
+                this.classList.toggle('active');
+                const content = this.nextElementSibling;
+                content.classList.toggle('active');
+            });
+        });
+    </script>
+</body>
+</html>
+        
