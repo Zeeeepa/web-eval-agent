@@ -416,13 +416,57 @@ class TestExecutor:
         return validation_results
     
     def _extract_agent_steps(self, agent_result) -> List[str]:
-        """Extract agent steps from the result."""
+        """Extract agent steps from the browser-use AgentHistoryList result."""
         steps = []
         
-        if hasattr(agent_result, 'history'):
-            for item in agent_result.history:
-                if hasattr(item, 'action'):
-                    steps.append(str(item.action))
+        try:
+            # Extract actions and thoughts from browser-use AgentHistoryList
+            # Note: These are methods, not properties, so we need to call them
+            model_actions = agent_result.model_actions() if hasattr(agent_result, 'model_actions') else []
+            model_thoughts = agent_result.model_thoughts() if hasattr(agent_result, 'model_thoughts') else []
+            action_names = agent_result.action_names() if hasattr(agent_result, 'action_names') else []
+            
+            # Extract detailed actions with thoughts
+            if model_actions:
+                for i, action in enumerate(model_actions):
+                    step_info = f"Step {i+1}: {action}"
+                    
+                    # Add corresponding thought if available
+                    if i < len(model_thoughts) and model_thoughts[i]:
+                        thought = str(model_thoughts[i]).strip()
+                        if thought:
+                            step_info += f" (Reasoning: {thought})"
+                    
+                    steps.append(step_info)
+            
+            # Also extract action names if available and no detailed actions
+            elif action_names:
+                for i, action_name in enumerate(action_names):
+                    steps.append(f"Action {i+1}: {action_name}")
+            
+            # Extract summary information
+            if hasattr(agent_result, 'number_of_steps'):
+                num_steps = agent_result.number_of_steps()
+                if num_steps:
+                    steps.append(f"Total Steps Taken: {num_steps}")
+                    
+            if hasattr(agent_result, 'is_successful'):
+                is_successful = agent_result.is_successful()
+                steps.append(f"Task Successful: {is_successful}")
+            
+            # Extract any final result or extracted content
+            if hasattr(agent_result, 'final_result'):
+                final_result = agent_result.final_result()
+                if final_result:
+                    steps.append(f"Final Result: {final_result}")
+            
+            if hasattr(agent_result, 'extracted_content'):
+                extracted_content = agent_result.extracted_content()
+                if extracted_content:
+                    steps.append(f"Extracted Content: {extracted_content}")
+                
+        except Exception as e:
+            steps.append(f"Error extracting agent steps: {str(e)}")
         
         # If no steps found, add a generic step
         if not steps:
