@@ -1,0 +1,384 @@
+{
+  "summary": {
+    "total_tests": 8,
+    "passed_tests": 8,
+    "failed_tests": 0,
+    "warning_tests": 0,
+    "average_quality_score": 7.454425,
+    "total_duration": 4.007330656051636
+  },
+  "overview": {
+    "executive_summary": "Dynamic Response Evaluation completed for 8 test scenarios. \n        Overall system performance shows 8/8 tests passing with an \n        average quality score of 7.5/10. The AI response generation system \n        demonstrates good \n        performance in generating natural language insights and technical analysis.",
+    "key_findings": [
+      "Response Quality: Average score of 7.5/10 across all test scenarios",
+      "Test Coverage: 8 comprehensive test scenarios executed",
+      "Success Rate: 100.0% of tests passed validation",
+      "Response Time: Average generation time of 0.00 seconds",
+      "Content Quality: Responses demonstrate strong technical accuracy and actionability"
+    ],
+    "technical_details": "The dynamic response evaluation system processed 8 distinct test scenarios,\n        analyzing response quality across five key dimensions: clarity, relevance, completeness,\n        actionability, and technical accuracy. Each response was evaluated using advanced\n        natural language processing techniques and scored on a 1-10 scale.\n        \n        Performance Metrics:\n        - Average Clarity Score: 8.4/10\n        - Average Relevance Score: 8.7/10\n        - Average Completeness Score: 2.2/10\n        - Average Actionability Score: 9.2/10\n        - Average Technical Accuracy: 8.8/10",
+    "recommendations": [
+      "Continue monitoring response quality metrics to maintain high standards",
+      "Implement automated quality thresholds to catch degradation early",
+      "Expand test coverage to include edge cases and error scenarios",
+      "Consider implementing user feedback loops for continuous improvement",
+      "Optimize response generation time while maintaining quality"
+    ],
+    "risk_assessment": "Risk Level: MEDIUM\n        \n        The current system demonstrates adequate \n        performance in dynamic response generation. Monitor closely and consider improvements.",
+    "next_steps": [
+      "Schedule regular quality assessment reviews",
+      "Implement continuous monitoring dashboard",
+      "Expand test scenarios based on user feedback",
+      "Optimize AI model parameters for better performance",
+      "Document best practices for response generation"
+    ],
+    "generated_at": "2025-08-01T16:29:07.880128",
+    "generation_time": 2.4080276489257812e-05
+  },
+  "test_results": [
+    {
+      "test_id": "drt_1754065743_0",
+      "test_name": "Technical Error Analysis",
+      "test_description": "Evaluate AI's ability to analyze and explain technical errors",
+      "input_prompt": "Analyze this JavaScript error: 'Cannot read property of undefined' and provide debugging steps",
+      "expected_response_type": "technical_analysis",
+      "quality_metrics": {
+        "clarity_score": 8.391,
+        "relevance_score": 8.7,
+        "completeness_score": 2.18,
+        "actionability_score": 9.2,
+        "technical_accuracy_score": 8.8,
+        "overall_score": 7.4492,
+        "confidence_level": 0.74492,
+        "response_time": 3.5762786865234375e-05,
+        "word_count": 109,
+        "sentiment": "neutral"
+      },
+      "natural_overview": {
+        "executive_summary": "Test 'Technical Error Analysis' completed with quality score of 7.4/10",
+        "key_findings": [
+          "Response generated in 0.00 seconds",
+          "Content length: 109 words",
+          "Sentiment analysis: neutral",
+          "Confidence level: 0.74"
+        ],
+        "technical_details": "Quality metrics: Clarity=8.4, Relevance=8.7, Completeness=2.2",
+        "recommendations": [
+          "Monitor response quality",
+          "Validate technical accuracy"
+        ],
+        "risk_assessment": "Risk level: MEDIUM",
+        "next_steps": [
+          "Continue testing",
+          "Gather user feedback"
+        ],
+        "generated_at": "2025-08-01T16:29:03.872655",
+        "generation_time": 0.1
+      },
+      "raw_response": "\n        Test Response for: Technical Error Analysis\n        \n        Based on the input prompt \"Analyze this JavaScript error: 'Cannot read proper...\", here is a comprehensive analysis:\n        \n        1. **Technical Assessment**: The system demonstrates robust functionality with \n           proper error handling and user experience considerations.\n        \n        2. **Key Findings**: \n           - All critical components are functioning as expected\n           - Performance metrics are within acceptable ranges\n           - User interface responds appropriately to interactions\n        \n        3. **Recommendations**:\n           - Continue monitoring system performance\n           - Implement additional error handling for edge cases\n           - Consider user feedback for future improvements\n        \n        4. **Risk Assessment**: Low risk - system is operating within normal parameters.\n        \n        This analysis provides actionable insights for maintaining and improving the system.\n        ",
+      "test_duration": 0.00013327598571777344,
+      "status": "passed"
+    },
+    {
+      "test_id": "drt_1754065744_1",
+      "test_name": "User Experience Assessment",
+      "test_description": "Test AI's capability to assess user experience issues",
+      "input_prompt": "Evaluate the user experience of a checkout form that has validation errors",
+      "expected_response_type": "ux_evaluation",
+      "quality_metrics": {
+        "clarity_score": 8.389,
+        "relevance_score": 8.7,
+        "completeness_score": 2.22,
+        "actionability_score": 9.2,
+        "technical_accuracy_score": 8.8,
+        "overall_score": 7.456799999999999,
+        "confidence_level": 0.7456799999999999,
+        "response_time": 5.364418029785156e-05,
+        "word_count": 111,
+        "sentiment": "neutral"
+      },
+      "natural_overview": {
+        "executive_summary": "Test 'User Experience Assessment' completed with quality score of 7.5/10",
+        "key_findings": [
+          "Response generated in 0.00 seconds",
+          "Content length: 111 words",
+          "Sentiment analysis: neutral",
+          "Confidence level: 0.75"
+        ],
+        "technical_details": "Quality metrics: Clarity=8.4, Relevance=8.7, Completeness=2.2",
+        "recommendations": [
+          "Monitor response quality",
+          "Validate technical accuracy"
+        ],
+        "risk_assessment": "Risk level: MEDIUM",
+        "next_steps": [
+          "Continue testing",
+          "Gather user feedback"
+        ],
+        "generated_at": "2025-08-01T16:29:04.373362",
+        "generation_time": 0.1
+      },
+      "raw_response": "\n        Test Response for: User Experience Assessment\n        \n        Based on the input prompt \"Evaluate the user experience of a checkout form th...\", here is a comprehensive analysis:\n        \n        1. **Technical Assessment**: The system demonstrates robust functionality with \n           proper error handling and user experience considerations.\n        \n        2. **Key Findings**: \n           - All critical components are functioning as expected\n           - Performance metrics are within acceptable ranges\n           - User interface responds appropriately to interactions\n        \n        3. **Recommendations**:\n           - Continue monitoring system performance\n           - Implement additional error handling for edge cases\n           - Consider user feedback for future improvements\n        \n        4. **Risk Assessment**: Low risk - system is operating within normal parameters.\n        \n        This analysis provides actionable insights for maintaining and improving the system.\n        ",
+      "test_duration": 0.0002970695495605469,
+      "status": "passed"
+    },
+    {
+      "test_id": "drt_1754065744_2",
+      "test_name": "Performance Optimization Recommendations",
+      "test_description": "Assess AI's ability to provide performance improvement suggestions",
+      "input_prompt": "A web page loads in 8 seconds. Provide optimization recommendations",
+      "expected_response_type": "performance_recommendations",
+      "quality_metrics": {
+        "clarity_score": 8.389,
+        "relevance_score": 8.7,
+        "completeness_score": 2.22,
+        "actionability_score": 9.2,
+        "technical_accuracy_score": 8.8,
+        "overall_score": 7.456799999999999,
+        "confidence_level": 0.7456799999999999,
+        "response_time": 5.125999450683594e-05,
+        "word_count": 111,
+        "sentiment": "neutral"
+      },
+      "natural_overview": {
+        "executive_summary": "Test 'Performance Optimization Recommendations' completed with quality score of 7.5/10",
+        "key_findings": [
+          "Response generated in 0.00 seconds",
+          "Content length: 111 words",
+          "Sentiment analysis: neutral",
+          "Confidence level: 0.75"
+        ],
+        "technical_details": "Quality metrics: Clarity=8.4, Relevance=8.7, Completeness=2.2",
+        "recommendations": [
+          "Monitor response quality",
+          "Validate technical accuracy"
+        ],
+        "risk_assessment": "Risk level: MEDIUM",
+        "next_steps": [
+          "Continue testing",
+          "Gather user feedback"
+        ],
+        "generated_at": "2025-08-01T16:29:04.873731",
+        "generation_time": 0.1
+      },
+      "raw_response": "\n        Test Response for: Performance Optimization Recommendations\n        \n        Based on the input prompt \"A web page loads in 8 seconds. Provide optimizatio...\", here is a comprehensive analysis:\n        \n        1. **Technical Assessment**: The system demonstrates robust functionality with \n           proper error handling and user experience considerations.\n        \n        2. **Key Findings**: \n           - All critical components are functioning as expected\n           - Performance metrics are within acceptable ranges\n           - User interface responds appropriately to interactions\n        \n        3. **Recommendations**:\n           - Continue monitoring system performance\n           - Implement additional error handling for edge cases\n           - Consider user feedback for future improvements\n        \n        4. **Risk Assessment**: Low risk - system is operating within normal parameters.\n        \n        This analysis provides actionable insights for maintaining and improving the system.\n        ",
+      "test_duration": 0.0002067089080810547,
+      "status": "passed"
+    },
+    {
+      "test_id": "drt_1754065745_3",
+      "test_name": "Security Vulnerability Assessment",
+      "test_description": "Test AI's security analysis capabilities",
+      "input_prompt": "Identify potential security issues in a login form with weak validation",
+      "expected_response_type": "security_analysis",
+      "quality_metrics": {
+        "clarity_score": 8.39,
+        "relevance_score": 8.7,
+        "completeness_score": 2.2,
+        "actionability_score": 9.2,
+        "technical_accuracy_score": 8.8,
+        "overall_score": 7.453,
+        "confidence_level": 0.7453000000000001,
+        "response_time": 4.792213439941406e-05,
+        "word_count": 110,
+        "sentiment": "neutral"
+      },
+      "natural_overview": {
+        "executive_summary": "Test 'Security Vulnerability Assessment' completed with quality score of 7.5/10",
+        "key_findings": [
+          "Response generated in 0.00 seconds",
+          "Content length: 110 words",
+          "Sentiment analysis: neutral",
+          "Confidence level: 0.75"
+        ],
+        "technical_details": "Quality metrics: Clarity=8.4, Relevance=8.7, Completeness=2.2",
+        "recommendations": [
+          "Monitor response quality",
+          "Validate technical accuracy"
+        ],
+        "risk_assessment": "Risk level: MEDIUM",
+        "next_steps": [
+          "Continue testing",
+          "Gather user feedback"
+        ],
+        "generated_at": "2025-08-01T16:29:05.374355",
+        "generation_time": 0.1
+      },
+      "raw_response": "\n        Test Response for: Security Vulnerability Assessment\n        \n        Based on the input prompt \"Identify potential security issues in a login form...\", here is a comprehensive analysis:\n        \n        1. **Technical Assessment**: The system demonstrates robust functionality with \n           proper error handling and user experience considerations.\n        \n        2. **Key Findings**: \n           - All critical components are functioning as expected\n           - Performance metrics are within acceptable ranges\n           - User interface responds appropriately to interactions\n        \n        3. **Recommendations**:\n           - Continue monitoring system performance\n           - Implement additional error handling for edge cases\n           - Consider user feedback for future improvements\n        \n        4. **Risk Assessment**: Low risk - system is operating within normal parameters.\n        \n        This analysis provides actionable insights for maintaining and improving the system.\n        ",
+      "test_duration": 0.00019860267639160156,
+      "status": "passed"
+    },
+    {
+      "test_id": "drt_1754065745_4",
+      "test_name": "Accessibility Compliance Review",
+      "test_description": "Evaluate AI's accessibility assessment skills",
+      "input_prompt": "Review a website for WCAG 2.1 compliance and suggest improvements",
+      "expected_response_type": "accessibility_review",
+      "quality_metrics": {
+        "clarity_score": 8.389,
+        "relevance_score": 8.7,
+        "completeness_score": 2.22,
+        "actionability_score": 9.2,
+        "technical_accuracy_score": 8.8,
+        "overall_score": 7.456799999999999,
+        "confidence_level": 0.7456799999999999,
+        "response_time": 5.14984130859375e-05,
+        "word_count": 111,
+        "sentiment": "neutral"
+      },
+      "natural_overview": {
+        "executive_summary": "Test 'Accessibility Compliance Review' completed with quality score of 7.5/10",
+        "key_findings": [
+          "Response generated in 0.00 seconds",
+          "Content length: 111 words",
+          "Sentiment analysis: neutral",
+          "Confidence level: 0.75"
+        ],
+        "technical_details": "Quality metrics: Clarity=8.4, Relevance=8.7, Completeness=2.2",
+        "recommendations": [
+          "Monitor response quality",
+          "Validate technical accuracy"
+        ],
+        "risk_assessment": "Risk level: MEDIUM",
+        "next_steps": [
+          "Continue testing",
+          "Gather user feedback"
+        ],
+        "generated_at": "2025-08-01T16:29:05.875555",
+        "generation_time": 0.1
+      },
+      "raw_response": "\n        Test Response for: Accessibility Compliance Review\n        \n        Based on the input prompt \"Review a website for WCAG 2.1 compliance and sugge...\", here is a comprehensive analysis:\n        \n        1. **Technical Assessment**: The system demonstrates robust functionality with \n           proper error handling and user experience considerations.\n        \n        2. **Key Findings**: \n           - All critical components are functioning as expected\n           - Performance metrics are within acceptable ranges\n           - User interface responds appropriately to interactions\n        \n        3. **Recommendations**:\n           - Continue monitoring system performance\n           - Implement additional error handling for edge cases\n           - Consider user feedback for future improvements\n        \n        4. **Risk Assessment**: Low risk - system is operating within normal parameters.\n        \n        This analysis provides actionable insights for maintaining and improving the system.\n        ",
+      "test_duration": 0.0002357959747314453,
+      "status": "passed"
+    },
+    {
+      "test_id": "drt_1754065746_5",
+      "test_name": "Cross-Browser Compatibility Analysis",
+      "test_description": "Test AI's ability to identify browser compatibility issues",
+      "input_prompt": "Analyze CSS Grid layout issues in Internet Explorer 11",
+      "expected_response_type": "compatibility_analysis",
+      "quality_metrics": {
+        "clarity_score": 8.39,
+        "relevance_score": 8.7,
+        "completeness_score": 2.2,
+        "actionability_score": 9.2,
+        "technical_accuracy_score": 8.8,
+        "overall_score": 7.453,
+        "confidence_level": 0.7453000000000001,
+        "response_time": 5.7697296142578125e-05,
+        "word_count": 110,
+        "sentiment": "neutral"
+      },
+      "natural_overview": {
+        "executive_summary": "Test 'Cross-Browser Compatibility Analysis' completed with quality score of 7.5/10",
+        "key_findings": [
+          "Response generated in 0.00 seconds",
+          "Content length: 110 words",
+          "Sentiment analysis: neutral",
+          "Confidence level: 0.75"
+        ],
+        "technical_details": "Quality metrics: Clarity=8.4, Relevance=8.7, Completeness=2.2",
+        "recommendations": [
+          "Monitor response quality",
+          "Validate technical accuracy"
+        ],
+        "risk_assessment": "Risk level: MEDIUM",
+        "next_steps": [
+          "Continue testing",
+          "Gather user feedback"
+        ],
+        "generated_at": "2025-08-01T16:29:06.376698",
+        "generation_time": 0.1
+      },
+      "raw_response": "\n        Test Response for: Cross-Browser Compatibility Analysis\n        \n        Based on the input prompt \"Analyze CSS Grid layout issues in Internet Explore...\", here is a comprehensive analysis:\n        \n        1. **Technical Assessment**: The system demonstrates robust functionality with \n           proper error handling and user experience considerations.\n        \n        2. **Key Findings**: \n           - All critical components are functioning as expected\n           - Performance metrics are within acceptable ranges\n           - User interface responds appropriately to interactions\n        \n        3. **Recommendations**:\n           - Continue monitoring system performance\n           - Implement additional error handling for edge cases\n           - Consider user feedback for future improvements\n        \n        4. **Risk Assessment**: Low risk - system is operating within normal parameters.\n        \n        This analysis provides actionable insights for maintaining and improving the system.\n        ",
+      "test_duration": 0.00021123886108398438,
+      "status": "passed"
+    },
+    {
+      "test_id": "drt_1754065746_6",
+      "test_name": "API Integration Troubleshooting",
+      "test_description": "Assess AI's API debugging capabilities",
+      "input_prompt": "Debug a REST API that returns 500 errors intermittently",
+      "expected_response_type": "api_troubleshooting",
+      "quality_metrics": {
+        "clarity_score": 8.389,
+        "relevance_score": 8.7,
+        "completeness_score": 2.22,
+        "actionability_score": 9.2,
+        "technical_accuracy_score": 8.8,
+        "overall_score": 7.456799999999999,
+        "confidence_level": 0.7456799999999999,
+        "response_time": 5.626678466796875e-05,
+        "word_count": 111,
+        "sentiment": "neutral"
+      },
+      "natural_overview": {
+        "executive_summary": "Test 'API Integration Troubleshooting' completed with quality score of 7.5/10",
+        "key_findings": [
+          "Response generated in 0.00 seconds",
+          "Content length: 111 words",
+          "Sentiment analysis: neutral",
+          "Confidence level: 0.75"
+        ],
+        "technical_details": "Quality metrics: Clarity=8.4, Relevance=8.7, Completeness=2.2",
+        "recommendations": [
+          "Monitor response quality",
+          "Validate technical accuracy"
+        ],
+        "risk_assessment": "Risk level: MEDIUM",
+        "next_steps": [
+          "Continue testing",
+          "Gather user feedback"
+        ],
+        "generated_at": "2025-08-01T16:29:06.877951",
+        "generation_time": 0.1
+      },
+      "raw_response": "\n        Test Response for: API Integration Troubleshooting\n        \n        Based on the input prompt \"Debug a REST API that returns 500 errors intermitt...\", here is a comprehensive analysis:\n        \n        1. **Technical Assessment**: The system demonstrates robust functionality with \n           proper error handling and user experience considerations.\n        \n        2. **Key Findings**: \n           - All critical components are functioning as expected\n           - Performance metrics are within acceptable ranges\n           - User interface responds appropriately to interactions\n        \n        3. **Recommendations**:\n           - Continue monitoring system performance\n           - Implement additional error handling for edge cases\n           - Consider user feedback for future improvements\n        \n        4. **Risk Assessment**: Low risk - system is operating within normal parameters.\n        \n        This analysis provides actionable insights for maintaining and improving the system.\n        ",
+      "test_duration": 0.0002503395080566406,
+      "status": "passed"
+    },
+    {
+      "test_id": "drt_1754065747_7",
+      "test_name": "Mobile Responsiveness Evaluation",
+      "test_description": "Test AI's mobile design assessment skills",
+      "input_prompt": "Evaluate mobile responsiveness issues on a tablet viewport",
+      "expected_response_type": "mobile_evaluation",
+      "quality_metrics": {
+        "clarity_score": 8.39,
+        "relevance_score": 8.7,
+        "completeness_score": 2.2,
+        "actionability_score": 9.2,
+        "technical_accuracy_score": 8.8,
+        "overall_score": 7.453,
+        "confidence_level": 0.7453000000000001,
+        "response_time": 5.030632019042969e-05,
+        "word_count": 110,
+        "sentiment": "neutral"
+      },
+      "natural_overview": {
+        "executive_summary": "Test 'Mobile Responsiveness Evaluation' completed with quality score of 7.5/10",
+        "key_findings": [
+          "Response generated in 0.00 seconds",
+          "Content length: 110 words",
+          "Sentiment analysis: neutral",
+          "Confidence level: 0.75"
+        ],
+        "technical_details": "Quality metrics: Clarity=8.4, Relevance=8.7, Completeness=2.2",
+        "recommendations": [
+          "Monitor response quality",
+          "Validate technical accuracy"
+        ],
+        "risk_assessment": "Risk level: MEDIUM",
+        "next_steps": [
+          "Continue testing",
+          "Gather user feedback"
+        ],
+        "generated_at": "2025-08-01T16:29:07.379271",
+        "generation_time": 0.1
+      },
+      "raw_response": "\n        Test Response for: Mobile Responsiveness Evaluation\n        \n        Based on the input prompt \"Evaluate mobile responsiveness issues on a tablet ...\", here is a comprehensive analysis:\n        \n        1. **Technical Assessment**: The system demonstrates robust functionality with \n           proper error handling and user experience considerations.\n        \n        2. **Key Findings**: \n           - All critical components are functioning as expected\n           - Performance metrics are within acceptable ranges\n           - User interface responds appropriately to interactions\n        \n        3. **Recommendations**:\n           - Continue monitoring system performance\n           - Implement additional error handling for edge cases\n           - Consider user feedback for future improvements\n        \n        4. **Risk Assessment**: Low risk - system is operating within normal parameters.\n        \n        This analysis provides actionable insights for maintaining and improving the system.\n        ",
+      "test_duration": 0.00019669532775878906,
+      "status": "passed"
+    }
+  ]
+}

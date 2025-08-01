@@ -48,6 +48,52 @@ agent_instance = None  # Store agent instance
 original_create_context: Optional[callable] = None  # Store original patched method
 active_cdp_session = None  # Store active CDP session for input handling
 active_screencast_running = False  # Track if screencast is running
+
+
+class BrowserUtils:
+    """Utility class for browser operations"""
+    
+    @staticmethod
+    def should_log_network_request(request) -> bool:
+        """Check if a network request should be logged"""
+        return should_log_network_request(request)
+    
+    @staticmethod
+    async def inject_agent_control_overlay(page: PlaywrightPage):
+        """Inject agent control overlay into page"""
+        return await inject_agent_control_overlay(page)
+    
+    @staticmethod
+    async def setup_page_agent_controls(page: PlaywrightPage):
+        """Setup page agent controls"""
+        return await setup_page_agent_controls(page)
+    
+    @staticmethod
+    def pause_agent():
+        """Pause the agent"""
+        return pause_agent()
+    
+    @staticmethod
+    def resume_agent():
+        """Resume the agent"""
+        return resume_agent()
+    
+    @staticmethod
+    def stop_agent():
+        """Stop the agent"""
+        return stop_agent()
+    
+    @staticmethod
+    def get_agent_state():
+        """Get agent state"""
+        return get_agent_state()
+    
+    @staticmethod
+    async def run_browser_task(*args, **kwargs):
+        """Run browser task"""
+        return await run_browser_task(*args, **kwargs)
+
+
 browser_task_loop = None  # Store the asyncio loop used by run_browser_task
 screenshot_task = None  # Store the periodic screenshot task
 
