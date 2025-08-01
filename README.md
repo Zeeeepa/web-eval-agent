@@ -1,361 +1,398 @@
-# 🚀 Web Eval Agent MCP Server (Gemini-Powered)
+# 🚀 Web Eval Agent - AI-Powered Web Application Testing
 
-> *Let the coding agent debug itself, you've got better things to do.*
+> *Autonomous web application testing powered by AI - Let the agent test your apps while you focus on building.*
 
-![Demo](./demo.gif)
+![Demo](demo.gif)
 
+## 🔥 What is Web Eval Agent?
 
+Web Eval Agent is an AI-powered testing framework that autonomously navigates, tests, and evaluates web applications. It uses advanced browser automation with AI to provide comprehensive testing reports, including UX evaluation, performance analysis, and bug detection.
 
-## 🔥 Supercharge Your Debugging
+## ⚡ Key Features
 
-This MCP Server launches a Google Gemini-powered browser-use agent to autonomously execute and debug web apps directly in your code editor.
+- 🤖 **AI-Powered Testing** - Intelligent test execution using Google Gemini
+- 🌐 **Full Browser Automation** - Real browser testing with Playwright
+- 📊 **Comprehensive Reports** - Detailed HTML and structured text reports
+- 🚨 **Error Detection** - Captures console errors, network failures, and UX issues
+- 📱 **Responsive Testing** - Multi-viewport and device testing
+- 🔄 **CI/CD Integration** - Easy integration with development workflows
+- 📈 **Performance Monitoring** - Page load times and interaction metrics
 
-## ⚡ Features
+## 🏁 Quick Start
 
-- 🌐 **Navigate your webapp** using BrowserUse powered by Google Gemini
-- 📊 **Capture network traffic** - requests are intelligently filtered and returned into the context window
-- 🚨 **Collect console errors** - captures logs & errors
-- 🤖 **Autonomous debugging** - the Cursor agent calls the web QA agent mcp server to test if the code it wrote works as epected end-to-end.
-
-## 🧰 MCP Tool Reference
-
-| Tool | Purpose |
-|------|---------|
-| `web_eval_agent` | 🤖 Automated UX evaluator that drives the browser, captures screenshots, console & network logs, and returns a rich UX report. |
-| `setup_browser_state` | 🔒 Opens an interactive (non-headless) browser so you can sign in once; the saved cookies/local-storage are reused by subsequent `web_eval_agent` runs. |
-
-**Key arguments**
-
-* `web_eval_agent`
-  * `url` **(required)** – address of the running app (e.g. `http://localhost:3000`)
-  * `task` **(required)** – natural-language description of what to test ("run through the signup flow and note any UX issues")
-  * `headless_browser` *(optional, default `false`)* – set to `true` to hide the browser window
-
-* `setup_browser_state`
-  * `url` *(optional)* – page to open first (handy to land directly on a login screen)
-
-You can trigger these tools straight from your IDE chat, for example:
+### 1. Clone and Install
 
 ```bash
-Evaluate my app at http://localhost:3000 – run web_eval_agent with the task "Try the full signup flow and report UX issues".
+# Clone the repository
+git clone https://github.com/Zeeeepa/web-eval-agent.git
+cd web-eval-agent
+
+# Run the installation script
+bash install.sh
 ```
 
-## 🏁 Quick Start (macOS/Linux)
+The `install.sh` script will:
+- Install Python dependencies using `uv`
+- Install Playwright browsers
+- Set up the project structure
+- Display instructions to configure environment variables
 
-1. Pre-requisites (typically not needed):
- - brew: `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
- - npm: (`brew install npm`)
- - jq: `brew install jq` 
-2. Get your Google Gemini API key from [Google AI Studio](https://aistudio.google.com/app/apikey)
-   - Installs [playwright](https://github.com/microsoft/playwright) 
-   - [Installs uv](https://astral.sh/)
-   - Inserts JSON into your code editor (Cursor/Cline/Windsurf) for you! 
-```bash
-curl -LSf https://operative.sh/install.sh -o install.sh && bash install.sh && rm install.sh
-```
-3. Visit your favorite IDE and restart to apply the changes
-4. Send a prompt in chat mode to call the web eval agent tool! e.g. 
-```bash
-Test my app on http://localhost:3000. Use web-eval-agent.
-```
+### 2. Configure Environment Variables
 
-## 🧪 Testing Local Applications
-
-The web-eval-agent excels at testing locally hosted applications with interactive features. Here's how to test your development servers:
-
-### Quick Local Testing
+After running `install.sh`, you'll see instructions to configure your environment:
 
 ```bash
-# Set your API key
-export GEMINI_API_KEY="your_gemini_api_key_here"
-
-# Run basic tests
-python tests/run_tests.py --test basic
-
-# Test your local application (make sure it's running first!)
-python tests/run_tests.py --test local --url http://localhost:3000
+# Edit the .env file to add your API keys
+nano .env
 ```
 
-### What Can Be Tested
+Add the following variables to your `.env` file:
+```env
+# Required: Google Gemini API Key (get from https://aistudio.google.com/app/apikey)
+GEMINI_API_KEY=your_gemini_api_key_here
 
-The agent can interact with and thoroughly test:
+# Optional: Additional configuration
+BROWSER_TYPE=chromium
+HEADLESS=true
+VIEWPORT_WIDTH=1920
+VIEWPORT_HEIGHT=1080
+```
 
-#### 🎯 **Interactive Elements**
-- **Forms**: Contact forms, registration, search forms, multi-step wizards
-- **Buttons**: Submit buttons, navigation, action buttons, toggle buttons
-- **Navigation**: Menus, breadcrumbs, pagination, routing between pages
-- **Input Controls**: Dropdowns, checkboxes, radio buttons, sliders, file uploads
+### 3. Run Tests
+
+```bash
+# Run the comprehensive test suite
+python tests
+```
+
+This command will:
+1. **Start a local test server** on `http://localhost:3000`
+2. **Launch Web Eval Agent** with `--url http://localhost:3000 --instructions examples/test_instructions/INSTRUCTIONS.md`
+3. **Execute comprehensive tests** including navigation, forms, and interactive elements
+4. **Generate detailed reports** in both HTML and structured text formats
+5. **Display results** with links to generated reports
+
+## 📊 What Gets Tested
+
+### 🎯 Interactive Elements
+- **Forms**: Contact forms, registration, search, multi-step wizards
+- **Navigation**: Menus, breadcrumbs, pagination, routing
+- **Controls**: Buttons, dropdowns, checkboxes, sliders, file uploads
 - **Dynamic Content**: Modals, popups, tabs, accordions, tooltips
 
-#### 🔄 **Complete User Workflows**
-- **Authentication**: Login/logout flows, password reset, user registration
-- **E-commerce**: Product browsing, cart management, checkout process
-- **Search & Filtering**: Search functionality, filters, sorting, pagination
-- **Data Management**: CRUD operations, form submissions, data validation
-- **User Profiles**: Profile editing, settings management, preferences
+### 🔄 Complete User Workflows
+- **Authentication**: Login/logout, password reset, registration
+- **E-commerce**: Product browsing, cart management, checkout
+- **Search & Filtering**: Search functionality, filters, sorting
+- **Data Management**: CRUD operations, form validation
+- **User Profiles**: Profile editing, settings, preferences
 
-#### 📱 **Responsive & Performance Testing**
-- **Mobile Layouts**: Test responsive design across different screen sizes
+### 📱 Cross-Platform Testing
+- **Responsive Design**: Multiple viewport sizes and devices
 - **Performance**: Page load times, interaction responsiveness
+- **Accessibility**: Basic accessibility evaluation
 - **Error Handling**: Form validation, network errors, edge cases
-- **Accessibility**: Basic accessibility evaluation and usability
 
-### Example Test Scenarios
+## 🛠️ Usage Examples
 
-#### Testing a React Development Server
+### Basic Web Application Testing
+
 ```bash
-# Start your React app
-npm start  # Usually http://localhost:3000
+# Test a local development server
+python -m web_eval_agent --url http://localhost:3000 --instructions examples/test_instructions/simple-test.md
 
-# Test with the agent
-python tests/test_local_webapp.py
+# Test with custom viewport
+python -m web_eval_agent --url http://localhost:8080 --viewport 1280x720 --browser firefox
+
+# Generate structured report
+python -m web_eval_agent --url https://example.com --report-format text --report-detail structured
 ```
 
-The agent will:
-1. Navigate to your React application
-2. Test all interactive components and forms
-3. Verify navigation and routing
-4. Check responsive design
-5. Evaluate user experience and provide detailed feedback
+### Advanced Testing Scenarios
 
-#### Testing Specific Features
-```python
-# Example: Testing a contact form
-task = """
-Test the contact form thoroughly:
-1. Fill out all fields with test data:
-   - Name: "John Doe"
-   - Email: "john.doe@example.com" 
-   - Message: "This is a test message"
-2. Submit the form and verify success handling
-3. Test validation with invalid inputs
-4. Check error message clarity
-5. Evaluate overall form usability
-"""
+```bash
+# Test specific user workflows
+python -m web_eval_agent \
+  --url http://localhost:3000 \
+  --instructions examples/test_instructions/comprehensive-test.md \
+  --headless false \
+  --output-file reports/comprehensive-test.html
+
+# Performance testing
+python -m web_eval_agent \
+  --url http://localhost:3000 \
+  --instructions examples/test_instructions/performance-test.md \
+  --report-detail verbose
 ```
 
-#### Testing E-commerce Functionality
-```python
-# Example: Testing shopping cart
-task = """
-Test the complete shopping experience:
-1. Browse product categories and listings
-2. Search for specific products
-3. Add multiple items to cart
-4. Modify cart quantities and remove items
-5. Proceed through checkout process
-6. Test payment form validation (use test data only)
-7. Verify order confirmation flow
-"""
-```
-
-### Supported Local Development Setups
+### Supported Frameworks
 
 | Framework | Default Port | Test Command |
 |-----------|-------------|--------------|
-| **React** | 3000 | `python tests/run_tests.py --test local --url http://localhost:3000` |
-| **Next.js** | 3000 | `python tests/run_tests.py --test local --url http://localhost:3000` |
-| **Vue.js** | 8080 | `python tests/run_tests.py --test local --url http://localhost:8080` |
-| **Angular** | 4200 | `python tests/run_tests.py --test local --url http://localhost:4200` |
-| **Express.js** | 8000 | `python tests/run_tests.py --test local --url http://localhost:8000` |
-| **Django** | 8000 | `python tests/run_tests.py --test local --url http://localhost:8000` |
-| **Flask** | 5000 | `python tests/run_tests.py --test local --url http://localhost:5000` |
+| **React** | 3000 | `python -m web_eval_agent --url http://localhost:3000` |
+| **Next.js** | 3000 | `python -m web_eval_agent --url http://localhost:3000` |
+| **Vue.js** | 8080 | `python -m web_eval_agent --url http://localhost:8080` |
+| **Angular** | 4200 | `python -m web_eval_agent --url http://localhost:4200` |
+| **Express.js** | 8000 | `python -m web_eval_agent --url http://localhost:8000` |
+| **Django** | 8000 | `python -m web_eval_agent --url http://localhost:8000` |
+| **Flask** | 5000 | `python -m web_eval_agent --url http://localhost:5000` |
 
-### Advanced Testing Features
-
-#### Custom Test Tasks
-Create specific test scenarios for your application:
-
-```python
-# Edit tests/test_local_webapp.py
-test_params = {
-    "url": "http://localhost:3000",
-    "task": """
-    Test my specific application features:
-    1. Test the user dashboard and data visualization
-    2. Verify the settings page functionality
-    3. Test the notification system
-    4. Check search and filtering capabilities
-    5. Validate the export/import features
-    
-    Provide detailed feedback on:
-    - User experience quality
-    - Performance issues
-    - Bug reports with reproduction steps
-    - Improvement recommendations
-    """,
-    "headless": False  # Set to True for background testing
-}
-```
-
-#### Debugging and Monitoring
-- **Live Dashboard**: Monitor test execution in real-time
-- **Screenshots**: Automatic screenshots at each interaction step
-- **Console Logs**: Capture JavaScript errors and warnings
-- **Network Traffic**: Monitor API calls and resource loading
-- **Performance Metrics**: Page load times and interaction delays
-
-### Test File Structure
+## 📁 Project Structure
 
 ```
-tests/
-├── README.md                 # Detailed testing documentation
-├── run_tests.py             # Unified test runner
-├── test_local_webapp.py     # Comprehensive local app testing
-├── simple_test.py           # Basic functionality validation
-└── test_ssh_demo.py         # Example search functionality demo
+web-eval-agent/
+├── src/web_eval_agent/          # Main package
+│   ├── core/                    # Core functionality
+│   │   ├── cli.py              # Command-line interface
+│   │   ├── config.py           # Configuration management
+│   │   ├── instruction_parser.py # Test instruction parsing
+│   │   └── test_executor.py    # Test execution engine
+│   ├── browser/                 # Browser management
+│   │   ├── browser_manager.py  # Browser lifecycle management
+│   │   ├── browser_pool.py     # Browser instance pooling
+│   │   └── browser_utils.py    # Browser utilities
+│   ├── reporting/               # Report generation
+│   │   ├── reporter.py         # Report generation engine
+│   │   └── templates/          # Report templates
+│   ├── mcp/                     # MCP server integration
+│   │   ├── mcp_server.py       # MCP server implementation
+│   │   └── tool_handlers.py    # MCP tool handlers
+│   └── utils/                   # Utilities
+│       ├── logging_config.py   # Logging configuration
+│       ├── prompts.py          # AI prompts
+│       └── utils.py            # General utilities
+├── tests/                       # Test suite
+│   ├── unit/                   # Unit tests
+│   ├── integration/            # Integration tests
+│   └── examples/               # Example tests
+├── examples/
+│   ├── reports/                # Sample reports
+│   ├── test_instructions/      # Test instruction files
+│   └── demo_apps/             # Demo applications
+└── docs/                       # Documentation
 ```
 
-### Getting Started with Local Testing
+## 📊 Report Formats
 
-1. **Start your local application**:
-   ```bash
-   npm start  # or your preferred start command
-   ```
+### HTML Reports (Default)
+- **Visual Screenshots**: Step-by-step visual documentation
+- **Interactive Timeline**: Chronological test execution
+- **Network Analysis**: Request/response details
+- **Console Logs**: JavaScript errors and warnings
+- **Performance Metrics**: Load times and interaction delays
 
-2. **Set your API key**:
-   ```bash
-   export GEMINI_API_KEY="your_gemini_api_key_here"
-   ```
+### Structured Text Reports
+- **ASCII Tables**: Professional formatted tables
+- **Summary Statistics**: Key metrics at a glance
+- **Test Execution Results**: Detailed pass/fail analysis
+- **Performance Data**: Timing and resource usage
+- **Configuration Details**: Test environment information
 
-3. **Run the test**:
-   ```bash
-   python tests/run_tests.py --test local --url http://localhost:3000
-   ```
+### Report Detail Levels
+- **`summary`**: High-level overview with key metrics
+- **`structured`**: Professional ASCII tables with comprehensive data
+- **`detailed`**: Full test analysis with screenshots and logs
+- **`verbose`**: Complete debugging information with all captured data
 
-4. **Review results**: The agent will provide a comprehensive report including:
-   - Feature functionality assessment
-   - User experience evaluation
-   - Bug reports with reproduction steps
-   - Performance observations
-   - Improvement recommendations
+## 🔧 Configuration Options
 
-For detailed testing documentation and examples, see [`tests/README.md`](tests/README.md).
-
-## 🛠️ Manual Installation
-1. Get your Google Gemini API key from [Google AI Studio](https://aistudio.google.com/app/apikey)
-2. [Install uv](https://docs.astral.sh/uv/#highlights)
+### Command Line Arguments
 
 ```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
+python -m web_eval_agent [OPTIONS]
+
+Options:
+  --url TEXT                    Target URL to test [required]
+  --instructions TEXT           Path to test instructions file
+  --browser [chromium|firefox|webkit]  Browser to use (default: chromium)
+  --viewport TEXT               Viewport size (e.g., 1920x1080)
+  --headless / --no-headless    Run browser in headless mode
+  --report-format [html|text]   Report output format
+  --report-detail [summary|structured|detailed|verbose]  Report detail level
+  --output-file TEXT            Output file path
+  --timeout INTEGER             Test timeout in seconds
+  --help                        Show this message and exit
 ```
 
-3. Source environment variables after installing UV
+### Environment Variables
 
-Mac
-```
-source ~/.zshrc
+```env
+# API Configuration
+GEMINI_API_KEY=your_api_key_here
+
+# Browser Configuration
+BROWSER_TYPE=chromium
+HEADLESS=true
+VIEWPORT_WIDTH=1920
+VIEWPORT_HEIGHT=1080
+
+# Report Configuration
+REPORT_FORMAT=html
+REPORT_DETAIL_LEVEL=detailed
+OUTPUT_DIRECTORY=reports
+
+# Performance Configuration
+PAGE_TIMEOUT=30000
+NAVIGATION_TIMEOUT=30000
 ```
 
-Linux 
+## 🧪 Testing Your Application
+
+### 1. Start Your Application
+```bash
+# Start your development server
+npm start  # or your preferred start command
+# Application should be running on http://localhost:3000
 ```
-source ~/.bashrc 
+
+### 2. Create Test Instructions
+Create a markdown file with your test scenarios:
+
+```markdown
+# My App Test Instructions
+
+## Test Scenarios
+
+### 1. Homepage Navigation
+- Navigate to the homepage
+- Verify all navigation links work
+- Check responsive design on mobile viewport
+
+### 2. User Registration
+- Fill out the registration form
+- Test form validation with invalid data
+- Verify successful registration flow
+
+### 3. Search Functionality
+- Use the search feature with various queries
+- Test search filters and sorting
+- Verify search results accuracy
 ```
-4. Install playwright:
+
+### 3. Run the Test
+```bash
+python -m web_eval_agent \
+  --url http://localhost:3000 \
+  --instructions my-test-instructions.md \
+  --report-format html \
+  --output-file reports/my-app-test.html
+```
+
+## 🚀 CI/CD Integration
+
+### GitHub Actions Example
+
+```yaml
+name: Web Eval Agent Tests
+
+on: [push, pull_request]
+
+jobs:
+  web-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          
+      - name: Install Web Eval Agent
+        run: |
+          pip install uv
+          bash install.sh
+          
+      - name: Start Application
+        run: |
+          npm install
+          npm start &
+          sleep 10  # Wait for app to start
+          
+      - name: Run Web Eval Tests
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          python -m web_eval_agent \
+            --url http://localhost:3000 \
+            --instructions tests/ci-test-instructions.md \
+            --headless \
+            --report-format html \
+            --output-file reports/ci-test-report.html
+            
+      - name: Upload Test Reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-reports
+          path: reports/
+```
+
+## 🛠️ Development
+
+### Setting Up Development Environment
 
 ```bash
-npm install -g chromium playwright && uvx --with playwright playwright install --with-deps
-```
-5. Add below JSON to your relevant code editor with api key 
-6. Restart your code editor
-   
-## 🔃 Updating 
-- `uv cache clean`
-- refresh MCP server 
+# Clone the repository
+git clone https://github.com/Zeeeepa/web-eval-agent.git
+cd web-eval-agent
 
-```json 
-    "web-eval-agent": {
-      "command": "uvx",
-      "args": [
-        "--refresh-package",
-        "webEvalAgent",
-        "--from",
-        "git+https://github.com/Operative-Sh/web-eval-agent.git",
-        "webEvalAgent"
-      ],
-      "env": {
-        "GEMINI_API_KEY": "<YOUR_KEY>"
-      }
-    }
-```
-## [Operative Discord Server](https://discord.gg/ryjCnf9myb)
+# Install development dependencies
+uv sync --dev
 
-## 🛠️ Manual Installation (Mac + Cursor/Cline/Windsurf) 
-1. Get your API key at operative.sh/mcp
-2. [Install uv](https://docs.astral.sh/uv/#highlights)
+# Install pre-commit hooks
+pre-commit install
+
+# Run tests
+python -m pytest tests/
+```
+
+### Running Tests
+
 ```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh)
-```
-3. Install playwright:
-```bash
-npm install -g chromium playwright && uvx --with playwright playwright install --with-deps
-```
-4. Add below JSON to your relevant code editor with api key 
-5. Restart your code editor
+# Run all tests
+python tests
 
-## Manual Installation (Windows + Cursor/Cline/Windsurf)  
+# Run specific test categories
+python -m pytest tests/unit/          # Unit tests
+python -m pytest tests/integration/   # Integration tests
+python -m pytest tests/examples/      # Example tests
 
-We're refining this, please open an issue if you have any issues! 
-1. Do all this in your code editor terminal 
-2. `curl -LSf https://operative.sh/install.sh -o install.sh && bash install.sh && rm install.sh`
-3. Get your API key at operative.sh/mcp
-4. Install uv `(curl -LsSf https://astral.sh/uv/install.sh | sh)`
-5. `uvx --from git+https://github.com/Operative-Sh/web-eval-agent.git playwright install`
-6. Restart code editor 
-
-
-## 🚨 Issues 
-- Updates aren't being received in code editors, update or reinstall for latest version: Run `uv cache clean` for latest 
-- Any issues feel free to open an Issue on this repo or in the discord!
-- 5/5 - static apps without changes weren't screencasting, fixed! `uv clean` + restart to get fix
-
-## Changelog 
-- 4/29 - Agent overlay update - pause/play/stop agent run in the browser
-
-## 📋 Example MCP Server Output Report
-
-```text
-📊 Web Evaluation Report for http://localhost:5173 complete!
-📝 Task: Test the API-key deletion flow by navigating to the API Keys section, deleting a key, and judging the UX.
-
-🔍 Agent Steps
-  📍 1. Navigate → http://localhost:5173
-  📍 2. Click     "Login"        (button index 2)
-  📍 3. Click     "API Keys"     (button index 4)
-  📍 4. Click     "Create Key"   (button index 9)
-  📍 5. Type      "Test API Key" (input index 2)
-  📍 6. Click     "Done"         (button index 3)
-  📍 7. Click     "Delete"       (button index 10)
-  📍 8. Click     "Delete"       (confirm index 3)
-🏁 Flow tested successfully – UX felt smooth and intuitive.
-
-🖥️ Console Logs (10)
-  1. [debug] [vite] connecting…
-  2. [debug] [vite] connected.
-  3. [info]  Download the React DevTools …
-     …
-
-🌐 Network Requests (10)
-  1. GET /src/pages/SleepingMasks.tsx                   304
-  2. GET /src/pages/MCPRegistryRegistry.tsx             304
-     …
-
-⏱️ Chronological Timeline
-  01:16:23.293 🖥️ Console [debug] [vite] connecting…
-  01:16:23.303 🖥️ Console [debug] [vite] connected.
-  01:16:23.312 ➡️ GET /src/pages/SleepingMasks.tsx
-  01:16:23.318 ⬅️ 304 /src/pages/SleepingMasks.tsx
-     …
-  01:17:45.038 🤖 🏁 Flow finished – deletion verified
-  01:17:47.038 🤖 📋 Conclusion repeated above
-👁️  See the "Operative Control Center" dashboard for live logs.
+# Run with coverage
+python -m pytest --cov=src/web_eval_agent tests/
 ```
 
-## Star History
+## 📚 Documentation
 
-[![Star History Chart](https://api.star-history.com/svg?repos=Operative-Sh/web-eval-agent&type=Date)](https://www.star-history.com/#Operative-Sh/web-eval-agent&Date)
+- **[Testing Guide](tests/TESTING_GUIDE.md)** - Comprehensive testing documentation
+- **[API Reference](docs/API.md)** - Detailed API documentation
+- **[Configuration Guide](docs/CONFIGURATION.md)** - Configuration options
+- **[Examples](examples/)** - Example test scenarios and reports
 
+## 🤝 Contributing
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🆘 Support
+
+- **Issues**: [GitHub Issues](https://github.com/Zeeeepa/web-eval-agent/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/Zeeeepa/web-eval-agent/discussions)
+- **Documentation**: [Wiki](https://github.com/Zeeeepa/web-eval-agent/wiki)
+
+## 🌟 Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=Zeeeepa/web-eval-agent&type=Date)](https://star-history.com/#Zeeeepa/web-eval-agent&Date)
 
 ---
 
-Built with <3 @ [operative.sh](https://www.operative.sh)
+**Built with ❤️ for developers who want reliable, automated web testing.**
+

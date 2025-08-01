@@ -24,7 +24,7 @@ from langchain.globals import set_verbose
 
 from .config import Config
 from .instruction_parser import TestScenario
-from .utils import format_duration, truncate_text
+from ..utils.utils import format_duration, truncate_text
 
 
 @dataclass

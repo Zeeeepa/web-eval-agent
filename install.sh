@@ -193,22 +193,66 @@ install_playwright() {
     print_success "Playwright browsers installed successfully"
 }
 
-# Function to check API key
-check_api_key() {
-    print_status "Checking for Gemini API key..."
+# Function to create .env file and show configuration instructions
+setup_environment() {
+    print_status "Setting up environment configuration..."
     
+    # Create .env file if it doesn't exist
+    if [[ ! -f ".env" ]]; then
+        print_status "Creating .env file..."
+        cat > .env << 'EOF'
+# Web Eval Agent Environment Configuration
+# ========================================
+
+# Required: Google Gemini API Key
+# Get your API key from: https://aistudio.google.com/app/apikey
+GEMINI_API_KEY=your_gemini_api_key_here
+
+# Optional: Browser Configuration
+BROWSER_TYPE=chromium
+HEADLESS=true
+VIEWPORT_WIDTH=1920
+VIEWPORT_HEIGHT=1080
+
+# Optional: Report Configuration
+REPORT_FORMAT=html
+REPORT_DETAIL_LEVEL=detailed
+OUTPUT_DIRECTORY=reports
+
+# Optional: Performance Configuration
+PAGE_TIMEOUT=30000
+NAVIGATION_TIMEOUT=30000
+EOF
+        print_success "Created .env file with default configuration"
+    else
+        print_status ".env file already exists"
+    fi
+    
+    # Check if API key is set
     if [[ -z "${GEMINI_API_KEY}" ]]; then
-        print_warning "GEMINI_API_KEY environment variable is not set."
         echo ""
-        echo "To use web-eval, you need a Google Gemini API key."
-        echo "1. Get your API key from: https://aistudio.google.com/app/apikey"
-        echo "2. Set it as an environment variable:"
-        echo "   export GEMINI_API_KEY='your_api_key_here'"
-        echo "3. Or pass it directly when running: web-eval --api-key your_key ..."
+        echo "🔧 CONFIGURATION REQUIRED"
+        echo "========================="
         echo ""
-        print_warning "You can continue installation, but you'll need the API key to run tests."
+        print_warning "You need to configure your environment variables before using Web Eval Agent."
+        echo ""
+        echo "📝 To configure your environment:"
+        echo ""
+        echo "   nano .env"
+        echo ""
+        echo "📋 Required configuration:"
+        echo "   1. Get your Gemini API key from: https://aistudio.google.com/app/apikey"
+        echo "   2. Replace 'your_gemini_api_key_here' with your actual API key"
+        echo "   3. Save and exit (Ctrl+X, then Y, then Enter in nano)"
+        echo ""
+        echo "🚀 After configuration, you can run tests with:"
+        echo "   python tests"
+        echo ""
+        print_warning "Installation complete, but configuration is required before running tests."
+        return 1
     else
         print_success "GEMINI_API_KEY found in environment"
+        return 0
     fi
 }
 
@@ -336,8 +380,8 @@ main() {
     # Install Playwright
     install_playwright
     
-    # Check API key
-    check_api_key
+    # Setup environment configuration (but don't exit on missing API key during install)
+    setup_environment || true
     
     # Create example instructions
     create_example_instructions
@@ -354,12 +398,32 @@ main() {
     echo "   • Node.js and npm"
     echo "   • Python dependencies"
     echo "   • Playwright browsers with system dependencies"
+    echo "   • Environment configuration (.env file)"
+    echo "   • Example test instructions (INSTRUCTIONS.md)"
     echo ""
-    echo "Next steps:"
-    echo "1. Set your Gemini API key: export GEMINI_API_KEY='your_key'"
-    echo "2. Test the installation: web-eval --version"
-    echo "3. Run a test: web-eval --url http://localhost:3000 --instructions INSTRUCTIONS.md"
-    echo ""
+    
+    # Check if API key is configured
+    if [[ -n "${GEMINI_API_KEY}" ]] && [[ "${GEMINI_API_KEY}" != "your_gemini_api_key_here" ]]; then
+        echo "🚀 Ready to run tests!"
+        echo ""
+        echo "Quick start:"
+        echo "   python tests"
+        echo ""
+        echo "This will:"
+        echo "   • Start a localhost:3000 test server"
+        echo "   • Run web-eval-agent with test instructions"
+        echo "   • Generate comprehensive test reports"
+        echo ""
+    else
+        echo "⚠️  Configuration required before running tests."
+        echo ""
+        echo "Next steps:"
+        echo "1. Configure environment: nano .env"
+        echo "2. Add your Gemini API key"
+        echo "3. Run tests: python tests"
+        echo ""
+    fi
+    
     echo "💡 Pro tip: The installation includes UV for faster Python package management"
     echo "   and enhanced Playwright setup for reliable browser automation."
     echo ""

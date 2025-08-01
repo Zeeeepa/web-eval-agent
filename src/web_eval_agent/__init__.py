@@ -9,8 +9,9 @@ __version__ = "2.0.0"
 __author__ = "Web Eval Agent Team"
 __description__ = "AI-powered web application testing and validation tool"
 
-from .cli import main
-from .test_executor import TestExecutor
-from .reporter import Reporter
+from .core.cli import main
+from .core.test_executor import TestExecutor
+from .reporting.reporter import Reporter
 
 __all__ = ["main", "TestExecutor", "Reporter"]
+
