@@ -19,6 +19,7 @@ class Config:
     # Output settings
     output_file: str = "web-eval-report.html"
     report_format: str = "html"
+    report_detail_level: str = "detailed"  # Options: "summary", "detailed", "verbose"
     
     # Browser settings
     browser: str = "chromium"

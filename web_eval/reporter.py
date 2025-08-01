@@ -61,8 +61,13 @@ class Reporter:
         return output_path
     
     async def _generate_text_report(self, results: TestResults) -> str:
-        """Generate a comprehensive text report."""
-        text_content = self._create_comprehensive_text_report(results)
+        """Generate a text report based on the configured detail level."""
+        if self.config.report_detail_level == "summary":
+            text_content = self._create_summary_text_report(results)
+        elif self.config.report_detail_level == "verbose":
+            text_content = self._create_verbose_text_report(results)
+        else:  # detailed (default)
+            text_content = self._create_comprehensive_text_report(results)
         
         output_path = self.config.output_file
         if not output_path.endswith('.txt'):
@@ -470,90 +475,512 @@ class Reporter:
         """Create comprehensive text report with emojis and structured sections."""
         lines = []
         
-        # Process each test result
-        for result in results.test_results:
-            # Header section
+        # Report Header
+        lines.extend([
+            "=" * 80,
+            "🧪 WEB EVALUATION AGENT - COMPREHENSIVE TEST REPORT",
+            "=" * 80,
+            f"📅 Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+            f"🌐 Target URL: {self.config.url}",
+            f"⏱️  Total Duration: {format_duration(results.total_duration)}",
+            ""
+        ])
+        
+        # Executive Summary
+        summary = results.summary
+        total_tests = summary.get('total_tests', 0)
+        passed_tests = summary.get('passed_tests', 0)
+        failed_tests = summary.get('failed_tests', 0)
+        success_rate = summary.get('success_rate', 0)
+        
+        lines.extend([
+            "📊 EXECUTIVE SUMMARY",
+            "-" * 40,
+            f"✅ Tests Passed: {passed_tests}/{total_tests}",
+            f"❌ Tests Failed: {failed_tests}/{total_tests}",
+            f"📈 Success Rate: {success_rate:.1f}%",
+            f"🔧 Browser: {self.config.browser}",
+            f"📱 Viewport: {self.config.viewport}",
+            f"⚡ Headless Mode: {'Yes' if self.config.headless else 'No'}",
+            ""
+        ])
+        
+        # Test Results Overview
+        if results.test_results:
             lines.extend([
-                f"📊 Web Evaluation Report for {self.config.url} complete!",
-                f"📝 Task: {result.scenario_name}",
+                "📋 TEST RESULTS OVERVIEW",
+                "-" * 40
+            ])
+            
+            for i, result in enumerate(results.test_results, 1):
+                status_icon = "✅" if result.passed else "❌"
+                duration_str = format_duration(result.duration)
+                lines.append(f"{i:2d}. {status_icon} {result.scenario_name} ({duration_str})")
+                
+                if result.error_message:
+                    lines.append(f"     💥 Error: {result.error_message}")
+            
+            lines.append("")
+        
+        # Detailed Test Results
+        lines.extend([
+            "🔍 DETAILED TEST RESULTS",
+            "=" * 80
+        ])
+        
+        # Process each test result
+        for i, result in enumerate(results.test_results, 1):
+            status_icon = "✅" if result.passed else "❌"
+            
+            # Test Header
+            lines.extend([
+                "",
+                f"TEST {i}/{len(results.test_results)}: {result.scenario_name}",
+                "-" * 60,
+                f"Status: {status_icon} {'PASSED' if result.passed else 'FAILED'}",
+                f"Duration: {format_duration(result.duration)}",
+                f"URL: {self.config.url}",
                 ""
             ])
             
+            # Error Information
+            if result.error_message:
+                lines.extend([
+                    "💥 ERROR DETAILS:",
+                    f"   {result.error_message}",
+                    ""
+                ])
+            
+            # Validation Results
+            if result.validation_results:
+                lines.append("✅ VALIDATION RESULTS:")
+                for validation in result.validation_results:
+                    passed = validation.get('passed', False)
+                    validation_text = validation.get('validation', 'Unknown validation')
+                    details = validation.get('details', '')
+                    icon = "✅" if passed else "❌"
+                    lines.append(f"   {icon} {validation_text}")
+                    if details:
+                        lines.append(f"      Details: {details}")
+                lines.append("")
+            
             # Agent Steps section
-            lines.append("🔍 Agent Steps")
+            lines.append("🤖 AGENT EXECUTION STEPS:")
             if result.agent_steps:
-                for step in result.agent_steps:
-                    lines.append(f"  {step}")
+                for j, step in enumerate(result.agent_steps, 1):
+                    lines.append(f"   {j:2d}. {step}")
             else:
-                lines.append("  📍 1. Navigate → Target URL")
-                lines.append("  🏁 Flow completed successfully.")
+                lines.append("   📍 1. Navigate → Target URL")
+                lines.append("   🏁 Flow completed successfully.")
             lines.append("")
             
             # Console Logs section
             console_count = len(result.console_logs)
-            lines.append(f"🖥️ Console Logs ({console_count})")
+            lines.append(f"🖥️  CONSOLE LOGS ({console_count} total):")
             if result.console_logs:
-                # Show first few logs with truncation
-                for i, log in enumerate(result.console_logs[:10], 1):
-                    log_text = log.get('text', '')
-                    log_type = log.get('type', 'log')
-                    # Truncate long log messages
-                    if len(log_text) > 60:
-                        log_text = log_text[:57] + "…"
-                    lines.append(f"  {i}. [{log_type}] {log_text}")
+                # Group logs by type
+                error_logs = [log for log in result.console_logs if log.get('type') == 'error']
+                warn_logs = [log for log in result.console_logs if log.get('type') == 'warn']
+                info_logs = [log for log in result.console_logs if log.get('type') not in ['error', 'warn']]
                 
-                if console_count > 10:
-                    lines.append(f"     … and {console_count - 10} more logs")
+                if error_logs:
+                    lines.append("   🚨 ERRORS:")
+                    for log in error_logs[:5]:
+                        log_text = log.get('text', '')[:100] + ("..." if len(log.get('text', '')) > 100 else "")
+                        lines.append(f"      • {log_text}")
+                    if len(error_logs) > 5:
+                        lines.append(f"      ... and {len(error_logs) - 5} more errors")
+                
+                if warn_logs:
+                    lines.append("   ⚠️  WARNINGS:")
+                    for log in warn_logs[:3]:
+                        log_text = log.get('text', '')[:100] + ("..." if len(log.get('text', '')) > 100 else "")
+                        lines.append(f"      • {log_text}")
+                    if len(warn_logs) > 3:
+                        lines.append(f"      ... and {len(warn_logs) - 3} more warnings")
+                
+                if info_logs:
+                    lines.append("   ℹ️  INFO/DEBUG:")
+                    for log in info_logs[:5]:
+                        log_text = log.get('text', '')[:80] + ("..." if len(log.get('text', '')) > 80 else "")
+                        lines.append(f"      • {log_text}")
+                    if len(info_logs) > 5:
+                        lines.append(f"      ... and {len(info_logs) - 5} more info logs")
             else:
-                lines.append("  No console logs captured")
+                lines.append("   No console logs captured")
             lines.append("")
             
             # Network Requests section
             network_count = len(result.network_requests)
-            lines.append(f"🌐 Network Requests ({network_count})")
+            lines.append(f"🌐 NETWORK ACTIVITY ({network_count} requests):")
             if result.network_requests:
-                # Show first few requests
-                for i, req in enumerate(result.network_requests[:10], 1):
-                    method = req.get('method', 'GET')
-                    url = req.get('url', '')
-                    status = req.get('response_status', 'pending')
-                    
-                    # Extract just the path/filename from URL
-                    url_path = url.split('/')[-1] if '/' in url else url
-                    if len(url_path) > 40:
-                        url_path = url_path[:37] + "…"
-                    
-                    lines.append(f"  {i}. {method} {url_path}                   {status}")
+                # Group by status code
+                success_requests = [req for req in result.network_requests if str(req.get('response_status', '')).startswith('2')]
+                error_requests = [req for req in result.network_requests if str(req.get('response_status', '')).startswith(('4', '5'))]
+                other_requests = [req for req in result.network_requests if req not in success_requests + error_requests]
                 
-                if network_count > 10:
-                    lines.append(f"     … and {network_count - 10} more requests")
+                if success_requests:
+                    lines.append("   ✅ SUCCESSFUL REQUESTS:")
+                    for req in success_requests[:5]:
+                        method = req.get('method', 'GET')
+                        url = req.get('url', '')
+                        status = req.get('response_status', 'pending')
+                        # Shorten URL for readability
+                        url_display = url.split('/')[-1] if '/' in url else url
+                        if len(url_display) > 50:
+                            url_display = url_display[:47] + "..."
+                        lines.append(f"      {method} {url_display} → {status}")
+                    if len(success_requests) > 5:
+                        lines.append(f"      ... and {len(success_requests) - 5} more successful requests")
+                
+                if error_requests:
+                    lines.append("   ❌ FAILED REQUESTS:")
+                    for req in error_requests:
+                        method = req.get('method', 'GET')
+                        url = req.get('url', '')
+                        status = req.get('response_status', 'pending')
+                        url_display = url.split('/')[-1] if '/' in url else url
+                        if len(url_display) > 50:
+                            url_display = url_display[:47] + "..."
+                        lines.append(f"      {method} {url_display} → {status}")
+                
+                if other_requests:
+                    lines.append("   📋 OTHER REQUESTS:")
+                    for req in other_requests[:3]:
+                        method = req.get('method', 'GET')
+                        url = req.get('url', '')
+                        status = req.get('response_status', 'pending')
+                        url_display = url.split('/')[-1] if '/' in url else url
+                        if len(url_display) > 50:
+                            url_display = url_display[:47] + "..."
+                        lines.append(f"      {method} {url_display} → {status}")
+                    if len(other_requests) > 3:
+                        lines.append(f"      ... and {len(other_requests) - 3} more requests")
             else:
-                lines.append("  No network requests captured")
+                lines.append("   No network requests captured")
             lines.append("")
             
+            # Screenshots section
+            if result.screenshots:
+                lines.extend([
+                    f"📸 SCREENSHOTS ({len(result.screenshots)} captured):",
+                    "   Screenshots saved for visual verification",
+                    ""
+                ])
+            
             # Chronological Timeline section
-            lines.append("⏱️ Chronological Timeline")
+            lines.append("⏱️  EXECUTION TIMELINE:")
             if hasattr(result, 'timeline_events') and result.timeline_events:
                 # Sort timeline events by elapsed time
                 sorted_events = sorted(result.timeline_events, key=lambda x: x.get('elapsed_ms', 0))
                 
-                for event in sorted_events[:20]:  # Show first 20 events
+                for event in sorted_events[:15]:  # Show first 15 events
                     timestamp = event.get('timestamp', '00:00:00.000')
                     description = event.get('description', '')
-                    lines.append(f"  {timestamp} {description}")
+                    lines.append(f"   {timestamp} {description}")
                 
-                if len(result.timeline_events) > 20:
-                    lines.append(f"     … and {len(result.timeline_events) - 20} more events")
+                if len(result.timeline_events) > 15:
+                    lines.append(f"   ... and {len(result.timeline_events) - 15} more timeline events")
             else:
-                lines.append("  No timeline events captured")
+                lines.append("   No detailed timeline available")
             
-            # Add final note
             lines.extend([
-                "👁️  See the \"Operative Control Center\" dashboard for live logs.",
+                "",
+                "─" * 60,
                 ""
             ])
         
+        # Report Footer
+        lines.extend([
+            "🎯 REPORT SUMMARY",
+            "=" * 40,
+            f"Total Tests Executed: {total_tests}",
+            f"Overall Success Rate: {success_rate:.1f}%",
+            f"Total Execution Time: {format_duration(results.total_duration)}",
+            "",
+            "📋 For detailed analysis and visual reports, check the HTML output.",
+            "🔧 For technical support, review the console logs above.",
+            "",
+            "Generated by Web Eval Agent 🤖",
+            "=" * 80
+        ])
+        
         return "\n".join(lines)
+    
+    def _create_summary_text_report(self, results: TestResults) -> str:
+        """Create a concise summary text report."""
+        summary = results.summary
+        total_tests = summary.get('total_tests', 0)
+        passed_tests = summary.get('passed_tests', 0)
+        failed_tests = summary.get('failed_tests', 0)
+        success_rate = summary.get('success_rate', 0)
+        
+        # Create test overview
+        test_overview_lines = []
+        for i, result in enumerate(results.test_results, 1):
+            status_icon = "✅" if result.passed else "❌"
+            duration_str = format_duration(result.duration)
+            test_overview_lines.append(f"{i:2d}. {status_icon} {result.scenario_name} ({duration_str})")
+            
+            if result.error_message:
+                test_overview_lines.append(f"     💥 Error: {result.error_message}")
+        
+        test_overview = "\n".join(test_overview_lines) if test_overview_lines else "No tests executed"
+        
+        # Format template variables
+        template_vars = {
+            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'url': self.config.url,
+            'total_duration': format_duration(results.total_duration),
+            'passed_tests': passed_tests,
+            'total_tests': total_tests,
+            'failed_tests': failed_tests,
+            'success_rate': success_rate,
+            'browser': self.config.browser,
+            'viewport': self.config.viewport,
+            'headless_mode': 'Yes' if self.config.headless else 'No',
+            'test_overview': test_overview
+        }
+        
+        # Load and format template
+        template_path = Path(__file__).parent / "templates" / "report_summary.txt"
+        if template_path.exists():
+            with open(template_path, 'r', encoding='utf-8') as f:
+                template = f.read()
+            return template.format(**template_vars)
+        else:
+            # Fallback if template doesn't exist
+            return self._create_fallback_summary_report(template_vars)
+    
+    def _create_verbose_text_report(self, results: TestResults) -> str:
+        """Create a verbose text report with extensive analysis."""
+        summary = results.summary
+        total_tests = summary.get('total_tests', 0)
+        passed_tests = summary.get('passed_tests', 0)
+        failed_tests = summary.get('failed_tests', 0)
+        success_rate = summary.get('success_rate', 0)
+        
+        # Create test overview
+        test_overview_lines = []
+        for i, result in enumerate(results.test_results, 1):
+            status_icon = "✅" if result.passed else "❌"
+            duration_str = format_duration(result.duration)
+            test_overview_lines.append(f"{i:2d}. {status_icon} {result.scenario_name} ({duration_str})")
+            
+            if result.error_message:
+                test_overview_lines.append(f"     💥 Error: {result.error_message}")
+        
+        test_overview = "\n".join(test_overview_lines) if test_overview_lines else "No tests executed"
+        
+        # Generate detailed results (reuse existing method)
+        detailed_results = self._create_comprehensive_text_report(results)
+        
+        # Calculate performance metrics
+        durations = [result.duration for result in results.test_results if result.duration]
+        avg_duration = sum(durations) / len(durations) if durations else 0
+        longest_test = max(durations) if durations else 0
+        shortest_test = min(durations) if durations else 0
+        
+        total_console_logs = sum(len(result.console_logs) for result in results.test_results)
+        total_network_requests = sum(len(result.network_requests) for result in results.test_results)
+        total_screenshots = sum(len(result.screenshots) for result in results.test_results)
+        
+        # Error analysis
+        error_analysis = self._analyze_errors(results)
+        network_analysis = self._analyze_network_requests(results)
+        console_analysis = self._analyze_console_logs(results)
+        recommendations = self._generate_recommendations(results)
+        
+        # Format template variables
+        template_vars = {
+            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'url': self.config.url,
+            'total_duration': format_duration(results.total_duration),
+            'passed_tests': passed_tests,
+            'total_tests': total_tests,
+            'failed_tests': failed_tests,
+            'success_rate': success_rate,
+            'browser': self.config.browser,
+            'viewport': self.config.viewport,
+            'headless_mode': 'Yes' if self.config.headless else 'No',
+            'test_overview': test_overview,
+            'detailed_results': detailed_results,
+            'avg_duration': format_duration(avg_duration),
+            'longest_test': format_duration(longest_test),
+            'shortest_test': format_duration(shortest_test),
+            'total_console_logs': total_console_logs,
+            'total_network_requests': total_network_requests,
+            'total_screenshots': total_screenshots,
+            'error_analysis': error_analysis,
+            'network_analysis': network_analysis,
+            'console_analysis': console_analysis,
+            'recommendations': recommendations
+        }
+        
+        # Load and format template
+        template_path = Path(__file__).parent / "templates" / "report_verbose.txt"
+        if template_path.exists():
+            with open(template_path, 'r', encoding='utf-8') as f:
+                template = f.read()
+            return template.format(**template_vars)
+        else:
+            # Fallback if template doesn't exist
+            return self._create_fallback_verbose_report(template_vars)
+    
+    def _analyze_errors(self, results: TestResults) -> str:
+        """Analyze errors across all test results."""
+        error_lines = []
+        failed_tests = [result for result in results.test_results if not result.passed]
+        
+        if not failed_tests:
+            error_lines.append("✅ No errors detected across all tests!")
+            return "\n".join(error_lines)
+        
+        error_lines.append(f"Found {len(failed_tests)} failed test(s):")
+        
+        for result in failed_tests:
+            error_lines.append(f"❌ {result.scenario_name}:")
+            if result.error_message:
+                error_lines.append(f"   Error: {result.error_message}")
+            
+            # Analyze console errors
+            console_errors = [log for log in result.console_logs if log.get('type') == 'error']
+            if console_errors:
+                error_lines.append(f"   Console Errors: {len(console_errors)}")
+                for error in console_errors[:3]:  # Show first 3 errors
+                    error_text = error.get('text', '')[:100]
+                    error_lines.append(f"     • {error_text}")
+        
+        return "\n".join(error_lines)
+    
+    def _analyze_network_requests(self, results: TestResults) -> str:
+        """Analyze network requests across all test results."""
+        all_requests = []
+        for result in results.test_results:
+            all_requests.extend(result.network_requests)
+        
+        if not all_requests:
+            return "No network requests captured"
+        
+        # Group by status code
+        success_count = len([req for req in all_requests if str(req.get('response_status', '')).startswith('2')])
+        error_count = len([req for req in all_requests if str(req.get('response_status', '')).startswith(('4', '5'))])
+        other_count = len(all_requests) - success_count - error_count
+        
+        lines = [
+            f"Total Network Requests: {len(all_requests)}",
+            f"✅ Successful (2xx): {success_count}",
+            f"❌ Failed (4xx/5xx): {error_count}",
+            f"📋 Other: {other_count}"
+        ]
+        
+        # Show most common request types
+        methods = {}
+        for req in all_requests:
+            method = req.get('method', 'GET')
+            methods[method] = methods.get(method, 0) + 1
+        
+        if methods:
+            lines.append("\nRequest Methods:")
+            for method, count in sorted(methods.items(), key=lambda x: x[1], reverse=True):
+                lines.append(f"  {method}: {count}")
+        
+        return "\n".join(lines)
+    
+    def _analyze_console_logs(self, results: TestResults) -> str:
+        """Analyze console logs across all test results."""
+        all_logs = []
+        for result in results.test_results:
+            all_logs.extend(result.console_logs)
+        
+        if not all_logs:
+            return "No console logs captured"
+        
+        # Group by type
+        log_types = {}
+        for log in all_logs:
+            log_type = log.get('type', 'log')
+            log_types[log_type] = log_types.get(log_type, 0) + 1
+        
+        lines = [f"Total Console Logs: {len(all_logs)}"]
+        
+        for log_type, count in sorted(log_types.items(), key=lambda x: x[1], reverse=True):
+            icon = "🚨" if log_type == "error" else "⚠️" if log_type == "warn" else "ℹ️"
+            lines.append(f"{icon} {log_type.upper()}: {count}")
+        
+        return "\n".join(lines)
+    
+    def _generate_recommendations(self, results: TestResults) -> str:
+        """Generate recommendations based on test results."""
+        recommendations = []
+        
+        # Check success rate
+        success_rate = results.summary.get('success_rate', 0)
+        if success_rate < 80:
+            recommendations.append("🔧 Consider investigating failed tests to improve overall success rate")
+        
+        # Check for console errors
+        total_errors = sum(len([log for log in result.console_logs if log.get('type') == 'error']) 
+                          for result in results.test_results)
+        if total_errors > 0:
+            recommendations.append(f"🚨 Found {total_errors} console errors - review and fix JavaScript issues")
+        
+        # Check for network failures
+        failed_requests = sum(len([req for req in result.network_requests 
+                                 if str(req.get('response_status', '')).startswith(('4', '5'))])
+                             for result in results.test_results)
+        if failed_requests > 0:
+            recommendations.append(f"🌐 Found {failed_requests} failed network requests - check API endpoints")
+        
+        # Check test duration
+        avg_duration = sum(result.duration for result in results.test_results) / len(results.test_results) if results.test_results else 0
+        if avg_duration > 30:  # 30 seconds
+            recommendations.append("⏱️ Tests are taking longer than expected - consider optimizing page load times")
+        
+        if not recommendations:
+            recommendations.append("✅ All tests look good! No specific recommendations at this time.")
+        
+        return "\n".join(recommendations)
+    
+    def _create_fallback_summary_report(self, template_vars: dict) -> str:
+        """Create fallback summary report if template is missing."""
+        return f"""================================================================================
+🧪 WEB EVALUATION AGENT - SUMMARY REPORT
+================================================================================
+📅 Generated: {template_vars['timestamp']}
+🌐 Target URL: {template_vars['url']}
+⏱️  Total Duration: {template_vars['total_duration']}
+
+📊 EXECUTIVE SUMMARY
+────────────────────────────────────────
+✅ Tests Passed: {template_vars['passed_tests']}/{template_vars['total_tests']}
+❌ Tests Failed: {template_vars['failed_tests']}/{template_vars['total_tests']}
+📈 Success Rate: {template_vars['success_rate']:.1f}%
+
+{template_vars['test_overview']}
+
+Generated by Web Eval Agent 🤖
+================================================================================"""
+    
+    def _create_fallback_verbose_report(self, template_vars: dict) -> str:
+        """Create fallback verbose report if template is missing."""
+        return f"""================================================================================
+🧪 WEB EVALUATION AGENT - VERBOSE REPORT
+================================================================================
+📅 Generated: {template_vars['timestamp']}
+🌐 Target URL: {template_vars['url']}
+⏱️  Total Duration: {template_vars['total_duration']}
+
+📊 EXECUTIVE SUMMARY
+────────────────────────────────────────
+✅ Tests Passed: {template_vars['passed_tests']}/{template_vars['total_tests']}
+❌ Tests Failed: {template_vars['failed_tests']}/{template_vars['total_tests']}
+📈 Success Rate: {template_vars['success_rate']:.1f}%
+
+{template_vars['detailed_results']}
+
+Generated by Web Eval Agent 🤖
+================================================================================"""
     
     def _create_text_report(self, results: TestResults) -> str:
         """Create legacy text report content (kept for compatibility)."""

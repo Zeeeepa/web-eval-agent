@@ -1,35 +1,55 @@
 # 🧪 Web-Eval Agent Test Suite
 
-This directory contains comprehensive tests for the web-eval agent, including an example Flask application and automated test runners.
+This directory contains comprehensive tests for the web-eval agent, organized into logical categories for better maintainability and test discovery.
 
-## 📁 Contents
+## 📁 Directory Structure
 
-### Example Application
+```
+tests/
+├── unit/                    # Unit tests for individual components
+├── integration/             # Integration tests for system components  
+├── api/                     # Tests for external API interactions
+├── examples/                # Example applications and demo tests
+├── fixtures/                # Test fixtures and shared data
+├── conftest.py             # Pytest configuration and fixtures
+└── README.md               # This file
+```
+
+## 🧪 Test Categories
+
+### 📦 Unit Tests (`tests/unit/`)
+Tests for individual components and functions:
+- **`simple_test.py`** - Basic functionality and API key validation
+- **`test_direct_mcp.py`** - Direct MCP server functionality testing
+
+### 🔗 Integration Tests (`tests/integration/`)
+Tests for system integration and complex workflows:
+- **`test_github_pr_integration.py`** - GitHub PR integration with async features
+- **`test_improved_ssh.py`** - Enhanced SSH functionality testing
+- **`test_minimal_ssh.py`** - Minimal SSH connection testing
+- **`test_ssh_demo.py`** - SSH demonstration and validation
+- **`test_ssh_search.py`** - SSH search functionality
+- **`test_ssh_search_simple.py`** - Simplified SSH search testing
+
+### 🌐 API Tests (`tests/api/`)
+Tests for external API interactions:
+- **`test_google.py`** - Google API integration testing
+
+### 📋 Examples (`tests/examples/`)
+Example applications and comprehensive demo tests:
 - **`example-app/`** - Complete Flask web application for testing
   - **`app.py`** - Main Flask application with multiple features
   - **`templates/`** - HTML templates for all pages
   - **`static/`** - CSS and JavaScript assets
   - **`requirements.txt`** - Python dependencies
-
-### Test Instructions
-- **`comprehensive-web-eval-test.md`** - Comprehensive test scenarios covering:
-  - Homepage navigation and overview
-  - Interactive counter functionality
-  - Contact form validation and submission
-  - Todo list AJAX operations
-  - User registration and authentication flow
-  - Interactive elements and API integration
-  - Cross-page navigation and state persistence
-  - Performance and error monitoring
-
-### Test Runners
-- **`run_comprehensive_test.py`** - Python script that:
-  - Starts the Flask application on port 5000
-  - Waits for server readiness
-  - Runs web-eval with comprehensive instructions
-  - Captures and displays results
-  - Cleans up processes
+- **`test_local_webapp.py`** - Local web application testing
+- **`test_simple_website.py`** - Simple website testing scenarios
+- **`comprehensive-web-eval-test.md`** - Comprehensive test scenarios
+- **`run_comprehensive_test.py`** - Automated comprehensive test runner
 - **`run_test.sh`** - Shell script wrapper for easy execution
+
+### 🔧 Fixtures (`tests/fixtures/`)
+Shared test data and configuration files (currently empty, ready for future use)
 
 ## 🚀 Quick Start
 
@@ -39,21 +59,59 @@ This directory contains comprehensive tests for the web-eval agent, including an
    export GEMINI_API_KEY="your_api_key_here"
    ```
 
-2. Install dependencies:
+2. Install test dependencies:
    ```bash
-   pip install flask requests
+   pip install pytest pytest-asyncio flask requests
    ```
 
-### Run Comprehensive Test
+### Running Tests
+
+#### Run All Tests
+```bash
+# From project root
+pytest tests/
+
+# With verbose output
+pytest -v tests/
+```
+
+#### Run Tests by Category
+```bash
+# Unit tests only
+pytest tests/unit/
+
+# Integration tests only  
+pytest tests/integration/
+
+# API tests only
+pytest tests/api/
+
+# Example/demo tests only
+pytest tests/examples/
+```
+
+#### Run Tests by Markers
+```bash
+# Run only fast tests (exclude slow tests)
+pytest -m "not slow" tests/
+
+# Run only tests that don't require API keys
+pytest -m "not requires_api_key" tests/
+
+# Run only tests that don't require network
+pytest -m "not requires_network" tests/
+```
+
+### Run Comprehensive Example Test
 
 From the project root directory:
 
 ```bash
 # Using the shell script
-./tests/run_test.sh
+./tests/examples/run_test.sh
 
 # Or directly with Python
-python tests/run_comprehensive_test.py
+python tests/examples/run_comprehensive_test.py
 ```
 
 ## 🎯 What the Test Does
@@ -203,4 +261,3 @@ A successful test run should show:
 - 🧹 Clean process cleanup
 
 This test suite validates that the web-eval agent can successfully analyze and interact with a real web application while generating the comprehensive text reports with emojis exactly as specified!
-
