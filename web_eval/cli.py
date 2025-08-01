@@ -29,7 +29,8 @@ def create_parser() -> argparse.ArgumentParser:
 Examples:
   web-eval --url http://localhost:3000 --instructions INSTRUCTIONS.md
   web-eval --url https://example.com --instructions tests/form-test.md --output report.html
-  web-eval --url http://localhost:3000 --instructions tests/e2e.md --headless --timeout 300
+  web-eval --url http://localhost:3000 --instructions tests/e2e.md --timeout 300
+  web-eval --url http://localhost:3000 --instructions tests/ui.md --no-headless
         """
     )
     
@@ -63,7 +64,15 @@ Examples:
     parser.add_argument(
         "--headless",
         action="store_true",
-        help="Run browser in headless mode (no GUI)"
+        default=True,
+        help="Run browser in headless mode (default: True, use --no-headless to disable)"
+    )
+    
+    parser.add_argument(
+        "--no-headless",
+        action="store_false",
+        dest="headless",
+        help="Run browser with GUI (disable headless mode)"
     )
     
     parser.add_argument(
